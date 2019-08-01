@@ -1,0 +1,14 @@
+\beamer@slide {fig:florentineFamilies}{2}
+\beamer@slide {fig:florentineFamilies}{3}
+\beamer@slide {eq:updateRule}{33}
+\beamer@slide {eq:updateRule}{38}
+\beamer@slide {eq:biasRule}{38}
+\beamer@slide {prop:updatePairExistence}{40}
+\beamer@slide {theorem:betaConvergence}{40}
+\beamer@slide {eq:updateRuleFull}{43}
+\beamer@slide {fig:deadlockedCycle}{49}
+\beamer@slide {sub@fig:deadlockedCycle}{49}
+\beamer@slide {fig:deadlockedPath}{49}
+\beamer@slide {sub@fig:deadlockedPath}{49}
+\beamer@slide {fig:erdosRenyiDeadlocked}{50}
+\beamer@slide {fig:deadlockedBarbell}{51}

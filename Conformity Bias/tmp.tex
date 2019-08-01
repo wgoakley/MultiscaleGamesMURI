@@ -1,0 +1,340 @@
+\documentclass{article}
+	% General document formatting
+	\usepackage[margin=0.7in]{geometry}
+	\usepackage[parfill]{parskip}
+	\usepackage[utf8]{inputenc}
+	
+	% Related to math
+	\usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+	\newtheorem{proposition}{Proposition}
+	\theoremstyle{remark}
+	\newtheorem{definition}{Definition}
+	\newtheorem{lemma}{Lemma}
+	\newtheorem{question}{Question}
+	\newtheorem{corollary}{Corollary}
+	
+	\newcommand{\R}[0]{\mathbb{R}}
+	\DeclareMathOperator{\sgn}{sgn}
+	\DeclareMathOperator*{\argmax}{argmax}
+	
+	\title{MURI Discordance Games Notes}
+	\author{MURI LA}
+	
+	\begin{document}
+	\maketitle
+	\section{Definitions}
+
+\begin{definition}{\label{defn:discordanceOfNode}}
+Let $G$ be an undirected graph with adjacency matrix $A$ and let $x\in\R$ be a vector indexed by the nodes $i\in\mathcal{V}(G)$. Denote and define the \textit{discordance} of a node $i\in\mathcal{V}(G)$ as the following function of $x$:
+	\begin{equation*}
+	d_i(x|G) = \sum_{k=1}^nA_{ik}(x_i-x_k)^2.
+	\end{equation*}
+\end{definition}
+Naturally, we may also define the discordance of a subset $V\subset\mathcal{V}(G)$ of nodes as follows
+\begin{definition}{\label{defn:discordanceOfSet}}
+Denote and define the discordance of a subset $S\subset\mathcal{V}(G)$ of nodes as follows:
+	\begin{equation*}
+	d_S(x|G) = \sum_{i\in S}d_i(x|G).
+	\end{equation*}
+\end{definition}
+If we interpret $x$ as a vector of \textit{opinions} about a topic, then $d_i(x|G)$ is one way to measure how much node $i$ disagrees with its neighbors in the graph $G$. Under the interpretation of $x$ as a vector of opinions, it is of interest to define a model for how the values $x_i$ change as nodes in $G$ communicate. Accordingly, we make the following definition: 
+
+\begin{definition}{\label{defn:alphaEqualAgreement}}
+Consider two nodes $p,q\in\mathcal{V}(G)$ with values $x_p,x_q\in\R$. We say that the nodes $p$ and $q$ come to an $\alpha$-\textit{equal agreement} if the nodes $p$ and $q$ change their values as follows:
+	\begin{equation*}
+	x_p\mapsto x_p+\sgn(x_q-x_p)\alpha\qquad\qquad x_q\mapsto x_q+\sgn(x_p-x_q)\alpha, 
+	\end{equation*}
+where
+	\begin{equation*}
+	0<\alpha\leq\frac{|x_p-x_q|}{2}.
+	\end{equation*}
+and $\sgn(x)=x/|x|$ for $x\neq 0$.
+\end{definition}
+
+We wish to investigate when agreements between two nodes $p,q\in\mathcal{V}(G)$ can occur under the following assumption:
+
+\begin{definition}{\label{defn:discordanceDecreasingUpdate}}
+	Let $S\subset\mathcal{V}(G)$ be a subset of nodes of the graph $G$ and let $x\in\R^n$ be a vector of values assigned to the nodes in $\mathcal{V}(G)$. Consider an update $x\mapsto x'\in\R^n$ to the values $x$ such that $x_i' = x_i$ for $i\not\in S$. We say that the update is \textit{discordance decreasing} if 
+	\begin{equation*}
+	d_S(x')-d_S(x) < 0
+	\end{equation*}
+\end{definition}
+
+\section{Notes from May 6 Meeting}
+
+\begin{question}{\label{question:updatePairExistence}}
+For every choice of $x\in\R^n$ and for every graph $G$ does there exist a pair of adjacent nodes $p,q\in\mathcal{V}(G)$ and an $\alpha>0$ sufficiently small such that an discordance decreasing $\alpha$-equal agreement can occur between $p$ and $q$.  
+\end{question}
+
+To address the question above, we state the following lemma.
+\begin{lemma}{\label{lemma:ddInequality}}
+	Let $p,q\in\mathcal{V}(G)$ be two adjacent nodes in a graph $G$. Let $x\in\R^n$ be a vector of values corresponding to the nodes of $G$. Assume without loss of generality that $x_p>x_q$. Then there exists an $\alpha>0$ sufficiently small such that a discordance decreasing update can occur between nodes $p$ and $q$ if the following inequality holds:
+	\begin{equation}{\label{lemma:ddInequality:eq:inequality}}
+		\sgn(x_p-x_q)\sum_{\substack{k=1\\k\neq q}}^nA_{ik}(x_k-x_p) + \sgn(x_p-x_q)\sum_{\substack{k=1\\k\neq p}}^nA_{jk}(x_k-x_q) < 4|x_p-x_q|
+	\end{equation}
+\end{lemma}
+\begin{proof}
+	Without loss of generality, assume $x_p>x_q$ so that the $\alpha$-equal agreement between nodes $p$ and $q$ becomes
+	\begin{equation}{\label{lemma:ddInequality:eq:agreement}}
+		x_p\mapsto x_p -\alpha \qquad\qquad x_q\mapsto x_q+\alpha.	
+	\end{equation}
+	Denote $x'$ the new vector of values after the agreement \eqref{lemma:ddInequality:eq:agreement}, denote $d_{ij}(x) = d_{\{i,j\}}(x)$, and denote $k_i$ the degree of node $i$. The change in discordance for the set $\{i,j\}$ is given by
+	\begin{equation}{\label{lemma:ddInequality:eq:Derivation}}
+		\begin{aligned}
+			d_{pq}(x')-d_{pq}(x) &= \sum_{\substack{k=1\\k\neq q}}^nA_{pk}((x_p-x_k-\alpha)^2-(x_p-x_k)^2) \\
+			&\qquad+\sum_{\substack{k=1\\k\neq p}}^nA_{qk}((x_q-x_k+\alpha)^2-(x_q-x_k)^2) + 2(x_p-x_q-2\alpha)^2 - 2(x_p-x_q)^2\\
+			&= -2\alpha\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_p-x_k) + (k_p-1)\alpha^2 + 2\alpha\sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) + (k_q-1)\alpha^2 - 8\alpha(x_p-x_q) + 8\alpha^2\\
+			&= 2\alpha\left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) - 4(x_p-x_q)\right) + \left(k_p+k_q+6\right)\alpha^2. 
+		\end{aligned}
+	\end{equation}
+	Thus, if inequality \eqref{lemma:ddInequality:eq:inequality} holds then \eqref{lemma:ddInequality:eq:Derivation} implies that for $\alpha$ sufficiently small, $d_{pq}(x')-d_{pq}(x) < 0$.
+\end{proof}
+[[Determine the $\alpha$ in lemma \ref{lemma:ddInequality} to determine how large of an agreement is possible.  When is a consensus to the middle ground possible?]]
+
+The following proposition answers question \ref{question:updatePairExistence} in the affirmative. The idea of the proof is to build a path (walk of distinct nodes) such that the node values along the path are strictly increasing. If inequality \eqref{lemma:ddInequality:eq:inequality} fails for all pairs of adjacent nodes in the graph, then the process by which the path is constructed does not terminate. Since there are a finite number of nodes in the graph, this leads to a contradiction.   
+\begin{proposition}{\label{prop:updatePairExistence}}
+	For any graph $G$ and any vector $x\in\R^n$ of values indexed by the nodes of $G$, there exists a pair of adjacent nodes $p,q\in\mathcal{V}(G)$ and an $\alpha>0$ sufficiently small such that a discordance decreasing $\alpha$-equal agreement is possible between nodes $p$ and $q$.
+\end{proposition}
+\begin{proof}
+	Let $i_0$ be the index of a node such that $x_{i_0}\leq x_{k}$ for all neighbors $k$ of $i_0$ (such as the minimal value in $x$) and $x_{i_0} < x_{i_1}$ for some neighbor $i_1$. We will call a node $i$ satisfying $x_{i}\leq x_{k}$ for all neighbors $k$ of $i$ \textit{locally minimal} and a node satisfying the same condition with $\geq$ locally maximal. Inequality \eqref{lemma:ddInequality:eq:inequality} with $i_0$ and $i_1$ reads
+	\begin{equation}{\label{lemma:ddInequality:eq:1}}
+		\sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_k-x_{i_1}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_{i_0}-x_k) < 4(x_{i_1}-x_{i_0})
+	\end{equation}
+	If equation \eqref{lemma:ddInequality:eq:1} holds, we can update nodes $i_0$ and $i_1$. If not, then \eqref{lemma:ddInequality:eq:1} being false and $x_{i_0}$ being minimal among its neighbors implies that 
+	\begin{equation}{\label{lemma:ddInequality:eq:2}}
+		\sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_k-x_{i_1}) \geq 4(x_{i_1}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_k-x_{i_0})>0.
+	\end{equation}
+	Equation \eqref{lemma:ddInequality:eq:2} implies that there exists a neighbor $i_2$ of $i_1$ such that $x_{i_2}>x_{i_1}$. Consider inequality \eqref{lemma:ddInequality:eq:inequality} for nodes $i_1$ and $i_2$:
+	\begin{equation}{\label{lemma:ddInequality:eq:3}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) + \sum_{\substack{k=1\\k\neq i_2}}^nA_{i_1k}(x_{i_1}-x_k) < 4(x_{i_2}-x_{i_1})
+	\end{equation}
+	If inequality \eqref{lemma:ddInequality:eq:3} holds, then we're done.  Otherwise, we write the negation of \eqref{lemma:ddInequality:eq:3} as follows:
+	\begin{equation}{\label{lemma:ddInequality:eq:4}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_{i_1}-x_k) + (x_{i_1}-x_{i_0}) \geq 3(x_{i_2}-x_{i_1})
+	\end{equation}
+	Reorganizing \eqref{lemma:ddInequality:eq:4} we obtain
+	\begin{equation}{\label{lemma:ddInequality:eq:5}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) \geq 3(x_{i_2}-x_{i_1}) - \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_{i_1}-x_k)- (x_{i_1}-x_{i_0})
+	\end{equation}
+	and by using inequality \eqref{lemma:ddInequality:eq:2} in \eqref{lemma:ddInequality:eq:5} we obtain
+	\begin{equation}{\label{lemma:ddInequality:eq:6}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) \geq 3(x_{i_2}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_{k}-x_{i_0})>0.
+	\end{equation}
+	Inequality \eqref{lemma:ddInequality:eq:6} shows that $i_2$ has a neighbor $i_3$ such that $x_{i_3}>x_{i_2}$. Continue in this fashion. Suppose that the inequality \eqref{lemma:ddInequality:eq:inequality} does not hold for consecutive values in the sequence $i_0,i_1,\ldots,i_m$ of consecutively adjacent vertices and such that $x_{i_0}<x_{i_{1}}<\ldots<x_{i_m}$. Suppose inequality \eqref{lemma:ddInequality:eq:1} fails when applied to nodes $i_m$ and $i_{m-1}$. Then,
+	\begin{multline}{\label{lemma:ddInequality:eq:7}}
+		\sum_{\substack{k=1\\k\neq i_{m-1}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 4(x_{i_m}-x_{i_{m-1}}) + \sum_{\substack{k=1\\k\neq i_{m}}}^n A_{i_{m-1}k}(x_k-x_{i_{m-1}}) \\= 3(x_{i_m}-x_{i_{m-1}}) + \sum_{\substack{k=1\\k\neq i_{m-2}}}^nA_{i_{m-1}k}(x_k-x_{i_{m-1}}) + (x_{i_{m-2}}-x_{i_{m-1}})
+	\end{multline}
+	By the induction hypothesis, we have that a similar inequality holds for $i_{m-1}$ and $i_{m-2}$:
+	\begin{multline}{\label{lemma:ddInequality:eq:8}}
+		\sum_{\substack{k=1\\k\neq i_{m-2}}}^nA_{i_{m-1}k}(x_k-x_{i_{m-1}}) \geq 4(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-1}}}^n A_{i_{m-2}k}(x_k-x_{i_{m-2}}) \\= 3(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-3}}}^nA_{i_{m-2}k}(x_k-x_{i_{m-2}}) + (x_{i_{m-3}}-x_{i_{m-2}})
+	\end{multline}
+	Plugging in inequality \eqref{lemma:ddInequality:eq:8} into \eqref{lemma:ddInequality:eq:7} we obtain
+	\begin{equation}
+		\sum_{\substack{k=1\\k\neq i_{m-1}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 3(x_{i_m}-x_{i_{m-1}}) + 2(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-3}}}^nA_{i_{m-2}k}(x_k-x_{i_{m-2}}) + (x_{i_{m-3}}-x_{i_{m-2}}).
+	\end{equation}
+	Continuing in this fashion, we obtain the following
+	\begin{equation}{\label{lemma:ddInequality:eq:7}}
+		\sum_{\substack{k=1\\k\neq i_{m}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 3(x_{i_m}-x_{i_{m-1}}) + 2(x_{i_{m-1}}-x_{i_1}) + 3(x_{i_1}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_k-x_{i_0}) > 0.
+	\end{equation}
+	Which shows that $i_m$ has a neighbor $i_{m+1}$ satisfying $x_{i_{m+1}}>x_{i_m}$.
+
+	Since the graph $G$ is finite, the process to obtain the distinct vertices $i_0,i_1,\ldots,i_m$ must terminate. [[one can strengthen the statement of the proposition]]
+\end{proof}
+
+\section{Notes from May 10 Meeting}
+
+\subsection{Previous Results and Definitions}
+
+We consider the following three aggregate quantities over the graph $G$ for measuring the total difference in opinion between the individuals in the graph:
+\begin{definition}{\label{defn:discordance}}
+	Denote and define the \textit{discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	d(X,t|G) = \sum_{i,j=1}^nA_{ij}(X_i(t)-X_j(t))^2 = \|MX(t)\|_2^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:totalDiscordance}}
+	Denote and define the \textit{total discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by
+\begin{equation*}
+	d(X,t)= \sum_{i,j=1}^n(X_i(t)-X_j(t))^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:consensusError}}
+	Denote and define the \textit{consensus error} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	e(X,t) = \|X(t)-X_{\text{ave}}\mathbf{1}\|^2_2.
+\end{equation*}
+\end{definition}
+
+For all three definitions \ref{defn:discordance}-\ref{defn:consensusError} we will omit the $t$ argument when we are interested in a fixed $X$.  Additionally, when concerned with a sequence $t_0<t_1<\cdots$ of times, we will specify just the index rather than the time: $e(X,k) = e(X,t_k)$ for example.
+
+\begin{proposition}{\label{prop:discErrorRelationship}}
+	The total discordance in definition \ref{defn:totalDiscordance} is related to the consensus error \ref{defn:consensusError} by 
+\begin{equation*}
+d(X,t) = 2ne(X,t).
+\end{equation*}
+\end{proposition}
+
+\begin{proposition}{\label{prop:discChange}}
+	Assume that nodes $p,q\in\mathcal{V}(G)$ and $(p,q)\in\mathcal{E}(G)$ are updated at time-step $k$ via the update rule \eqref{eq:generalUpdateRule2}. Then the change in total discordance at time-step $k$ is given by
+\begin{equation}{\label{prop:eq:discIncrement}}
+	d(X,k+1)-d(X,k) = -4\alpha_k(1-\alpha_k)n(X_p(k)-X_q(k))^2
+\end{equation}
+Equivalently, the consensus error changes as
+\begin{equation}{\label{prop:eq:errorIncrement}}
+	e(X,k+1) - e(X,k) = -2\alpha_k(1-\alpha_k)(X_p(k)-X_q(k))^2.
+\end{equation}
+\end{proposition}
+
+Cases:
+\begin{align*}
+	\sum_{\substack{k=1\\k\neq q}}^n A_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) &= \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p^++k_q^--(k_p^-+k_q^+))(x_p-x_q)\\
+\end{align*}
+If a node $i$ is locally minimal, then
+
+\subsection{Convergence of the $\alpha$-equal Agreement Update}
+
+Thus, we find that
+\begin{equation}
+	\beta(x_p-x_q) < \frac{4(x_p-x_q) - \left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k)\right)}{(k_p+k_q+6)/2} 
+\end{equation}
+Further, we know that $\beta<1/2$.
+
+Suppose that $\beta^*$ and $p^*,q^*\in\mathcal{V}(G)$ are chosen such that
+\begin{multline}{\label{eq:greedyUpdateRule}}
+	(\beta^*,p^*,q^*) \\= \max_{0<\beta\leq 1,(p,q)\in\mathcal{E}(G)}\left\{\beta(x_p-x_q) < \min\left(\frac{x_p-x_q}{2},\frac{4(x_p-x_q) - \left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^n(x_q-x_k)\right)}{(k_p+k_q+6)/2}\right)\right\} 
+\end{multline}
+We first prove the following lemma. This lemma implies Proposition \ref{prop:updatePairExistence} and is much simpler.
+\begin{lemma}{\label{lemma:kpluskminus}}
+	Denote $k_p^+$ the number of neighbors $k$ of node $p$ such that $x_k>x_p$ and denote $k_p^-$ the number of neighbors $k$ of node $p$ such that $x_k<x_p$. There exists at least one adjacent pair of nodes $p,q\in\mathcal{V}(G)$, where $x_p>x_q$ such that
+	\begin{equation*}
+		k^+_p+k^-_q - (k^-_p+k^+_p) < 0.	
+	\end{equation*}
+\end{lemma}
+\begin{proof}
+	Note the following equalities 
+	\begin{equation}{\label{lemma:kpluskminus:eq:equalities}}
+	\begin{aligned}
+		&\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_p^+ = \sum_{p=1}^nk_p^+k_p^- \quad &\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_q^- = \sum_{q=1}^nk_q^+k_q^-\\
+		&\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_p^- = \sum_{p=1}^n(k_p^-)^2 \quad &\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_q^+ = \sum_{q=1}^n(k_q^+)^2.
+	\end{aligned}
+	\end{equation}
+	The proof follows from the following, where we use \eqref{lemma:kpluskminus:eq:equalities}: 
+	\begin{equation}{\label{lemma:kpluskminus:eq:negative}}
+		\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}((k_p^++k_q^-) - (k_p^-+k_q^+)) = -\sum_{p=1}^n\left((k_p^+)^2+(k_p^-)^2-2k_p^+k_p^-\right) = -\sum_{p=1}^n(k_p^+-k_p^-)^2 
+	\end{equation}
+\end{proof}
+We have the following proposition as a result of Lemma \ref{lemma:kpluskminus},
+\begin{proposition}{\label{prop:existenceOfUpdate}}
+	For any graph $G$ and any vector $X\in\R^n$ of values indexed by the nodes of $G$, there exists a pair of adjacent nodes $p,q\in\mathcal{V}(G)$, where we assume $x_p>x_q$, and a $\beta>0$ sufficiently small such that a discordance decreasing $\alpha$-equal agreement, with $\alpha=\beta(x_p-x_q)$ is possible between nodes $p$ and $q$.
+\end{proposition}
+\begin{proof}
+Consider equation \eqref{lemma:ddInequality:eq:Derivation}.  Substituting $\alpha\mapsto\beta(x_p-x_q)$, we find that for an update at edge $(p,q)$ to be viable,
+\begin{equation}{\label{eq:betaAlphaCondition}}
+	2\left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) - 4(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0.
+\end{equation}
+or equivalently
+\begin{equation}{\label{eq:betaAlphaCondition2}}
+	2\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0.
+\end{equation}
+We consider summing \eqref{eq:betaAlphaCondition} over all pairs $p,q\in\mathcal{V}(G)$ of adjacent nodes with $x_p>x_q$; i.e. we evaluate
+\begin{equation}{\label{prop:existenceOfUpdate:eq:sum}}
+	\begin{aligned}
+		\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + \frac{k_p+k_q+6}{2}\beta(x_p-x_q)\right)
+	\end{aligned}
+\end{equation}
+We find that 
+\begin{equation}{\label{prop:existenceOfUpdate:eq:sumVals}}
+	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k)\right) = \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)\right)(x_p-x_q)
+\end{equation}
+Thus, \eqref{prop:existenceOfUpdate:eq:sum} can be written as
+\begin{multline}{\label{prop:existenceOfUpdate:eq:sumRewrite}}
+	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + \frac{k_p+k_q+6}{2}\beta(x_p-x_q)\right)\\
+	= \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)-2+\beta\frac{k_p+k_q+6}{2}\right)(x_p-x_q).
+\end{multline}
+By Lemma \ref{lemma:kpluskminus}, we know there exists at least one Th
+\end{proof}
+\begin{equation}
+	\begin{aligned}
+	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\sum_{k=1}^n\right.&\left.A_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k)\right) = \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)\right)(x_p-x_q)\\
+		&= 2\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p^++k_q^-)(x_p-x_q) - \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p+k_q)(x_p-x_q)
+	\end{aligned}
+\end{equation}
+We prove the following lemma, which gives an alternative proof of Proposition \ref{prop:betaUpdateConvergence} and gives a lower bound for $\beta^*$.
+\begin{lemma}{\label{lemma:betaLowerBound}}
+	Suppose the nodes $p,q\in\mathcal{V}(G)$ are adjacent and updateable, meaning that equation \eqref{eq:betaCondition2} holds.  Denote $k_i$ the degree of node $i\in\mathcal{V}(G)$ and denote .  Then
+	\begin{equation}
+		\beta^*(p,q) \geq \frac{6}{}
+	\end{equation}
+	In particular, let $K$ be defined by
+	\begin{equation}
+		K = \max_{\substack{i,j\in\mathcal{V}(G)\\(i,j)\in\mathcal{E}(G)}} (k_i+k_j),
+	\end{equation}
+\end{lemma}
+\begin{lemma}{\label{lemma:errorUpdateEquivalence}}
+	There exist constants $c_*(G),c^*(G)\in\R_{>0}$, independent of $X$, such that
+	\begin{equation}
+		c_*(G)e(X)^{1/2} \leq \beta^*|X_{p^*}-X_{q^*}| \leq c^*(G)e(X)^{1/2},
+	\end{equation}
+	where
+	\begin{equation}
+		c_*(G) =  \qquad c^*(G) = \sqrt{\frac{n}{2}}
+	\end{equation}
+\end{lemma}
+\begin{proof}
+	\begin{enumerate}
+		\item Upper Bound. We know that $\beta\leq1/2$ and $(x_p-x_q)^2 \leq d(X|G)$, so
+			\begin{equation}{\label{eq:updateSizeBound1}}
+				(\beta^*(x_{p^*}-x_{q^*}))^2\leq \frac{1}{4}d(X|G) 
+			\end{equation}
+			Thus by proposition \ref{prop:discErrorRelationship},
+			\begin{equation}{\label{eq:updateSizeBound2}}
+				(\beta^*(x_{p^*}-x_{q^*}))^2 \leq \frac{n}{2}e(X).
+			\end{equation}
+			This bound is tightest bound independent of $X$, as can be seen by letting the values associated with two adjacent nodes $i$ and $j$ be distinct and letting every other node $k$ have value $(x_i+x_j)/2$. This works for any connected graph of $n\geq2$ nodes.
+		\item Lower Bound. We prove the existence of a lower bound by contradiction. Later work will address determining the tightest bound.
+			Let $\epsilon_0>0$ be fixed and suppose for all $\epsilon>0$ there exists an $X\in\R^n$ such that $e(X)>\epsilon_0>0$ and $\beta^*|X_{p^*}-X_{q^*}|<\epsilon$. Denote $n(X|G)$ the number of directed non-zero edge differences $X_i-X_j$ for $(i,j)\in\mathcal{V}(G)$. By proposition \ref{prop:discErrorRelationship}, $e(X)>\epsilon_0$ implies
+			\begin{equation}
+				(X_{p^*}-X_{q^*})^2 \geq \frac{d(X)}{2m} > 2n\epsilon_0
+			\end{equation}
+	\end{enumerate}
+\end{proof}
+
+
+\subsection{Existence of an Update for the ``meet-in-the-middle'' Update}
+
+We consider updates of the following form:
+\begin{equation}{\label{eq:generalUpdateRule2}}
+\begin{aligned}
+        X_p(k+1) &= X_p(k) - \alpha_k\sgn(X_p(k)-X_q(k))\frac{X_p(k)-X_q(k)}{2}\\
+        X_q(k+1) &= X_q(k) + \alpha_k\sgn(X_p(k)-X_q(k))\frac{X_p(k)-X_q(k)}{2}.
+\end{aligned}
+\end{equation}
+This is the same update as the previous section except we now explicitly consider $\alpha_k\in(0,1]$ to be a coefficient giving the fraction of the gap the nodes $p$ and $q$ change their opinion upon an $\alpha$-equal agreement. We make note of the following proposition giving the amount by which the error changes upon an $\alpha_k$-equal agreement.
+\begin{proposition}{\label{prop:discChange}}
+        Assume that nodes $p,q\in\mathcal{V}(G)$ and $(p,q)\in\mathcal{E}(G)$ are updated at time-step $k$ via the update rule \eqref{eq:generalUpdateRule2}. Then the change in total discordance at time-step $k$ is given by
+\begin{equation}{\label{prop:eq:discIncrement}}
+        d(X,k+1)-d(X,k) = -4\alpha_k(1-\alpha_k)n(X_p(k)-X_q(k))^2
+\end{equation}
+Equivalently, the consensus error changes as
+\begin{equation}{\label{prop:eq:errorIncrement}}
+        e(X,k+1) - e(X,k) = -2\alpha_k(1-\alpha_k)(X_p(k)-X_q(k))^2.
+\end{equation}
+\end{proposition}
+The following corollary directly follows from proposition \ref{prop:discChange}:
+\begin{corollary}{\label{cor:recurrenceRelation}}
+The consensus error satisfies the recurrence relation
+\begin{equation}{\label{eq:discordanceRecurrence}}
+e(X,k+1)=(1-\alpha(k|p,q))e(X,k)
+\end{equation}
+where
+\begin{equation}{\label{eq:alphaDefn}}
+	\alpha(k|p,q) = \frac{4\alpha_k(1-\alpha_k)n(X_p(k)-X_q(k))^2}{d(X,k)} = \frac{2\alpha_k(1-\alpha_k)(X_p(k)-X_q(k))^2}{e(X,k)}.
+\end{equation}
+\end{corollary}
+
+
+
+\end{document}

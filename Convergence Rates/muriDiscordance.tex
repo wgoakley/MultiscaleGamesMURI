@@ -1,0 +1,954 @@
+\documentclass{amsart}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{relsize}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+\usepackage{empheq}
+\usepackage{tikz}
+\usetikzlibrary{fit,positioning,arrows,automata}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+\usepackage{subcaption}
+
+\urlstyle{same}
+
+\setlength{\textwidth}{\paperwidth}
+\addtolength{\textwidth}{-2in}
+\calclayout
+
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\ad}{ad}
+\DeclareMathOperator{\argmax}{argmax}
+\DeclareMathOperator{\argmin}{argmin}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\newcommand{\R}[0]{\mathbb{R}}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{example}{Example}
+\newtheorem{corollary}{Corollary}
+\newtheorem{lemma}{Lemma}
+
+
+\title{Consensus and Bias}
+\author{MURI L.A. Group}
+\date{March 2019}
+
+\allowdisplaybreaks
+
+\begin{document}
+
+\begin{abstract}
+%In this paper, we study consensus formation in a gossip-based opinion dynamics model.  We define a quanitity we call ``discordance,'' which is meant to be quantify the level of agreement on the network from the perspective of the individuals.  The discordance is to be contrasted with the global concept of ``consensus error,'' which we define as the total magnitude by which opinions on the network differ from the consensus opinion.  We study the interplay between these local and global concepts in this paper.  For the simple opinion dynamics model considered, we find that discordance and consensus error are at odds with one another: individuals must make decisions that increase discordance in order to decrease the consensus error.  Additionally, we find that the individual decisions that increase the discordance the most are often the decisions that decrease the consensus error the most.  The main object of the paper is to determine in what situations, in terms of graph topology and initial opinion configuration, these two observations hold.
+	In this paper, we study consensus formation in a gossip-based opinion dynamics model.  We consider whether social biases towards certain information can affect the speed of convergence to, and the nature of, the consensus reached.  In particular, we focus on the case where individuals are ``information seeking,'' meaning that individuals communicate more often with individuals who have an opinion that is different than their own.  In this case, we find that the convergence to consensus under the information seeking bias is [[hopefully sublinear but ??]] faster for [[certain graphs... not sure yet]] than convergence when individuals communicate at a constant rate in time. One implication of these findings is that consensus-formation in social networks can be greatly accelerated if individuals have biases based on others' opinions that cause them to communicate more frequently with others. [[Insert something like "in order to explain slow or fast consensus among individuals it is important to incorporate biases that may affect communication rates.]]
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+[[\P1 Opinion formation in social networks.  This paragraph needs work to make tight.]] The formation of individual opinion in a given setting is a complicated process involving the interplay between many factors including 1.) the structural and social characteristics of the setting, 2.) the structure of an individual's social network, 3.) the frequency with which an individual communicates with its social network, and 4.) initial opinions [[cite sociology literature]].  Opinion formation itself is the combination of at least two separate components, including 1.) the time scale at which an individual's opinion changes and 2.) the opinion held by an individual at a certain point in time [[sociology literature]]. The study of opinion formation is characterized by understanding how the stated factors affect the two components of opinion formation.
+
+[[\P2-\P$k$ mini lit review  the aspects of opinion formation that have been explored in the past.]] In particular, it is known that certain assumptions on the opinion formation process result in an eventual convergence to a consensus. [[What settings have been considered? What choices of 2-5 above have been explored? What affects do these choices have on the ``components'' 1-2? Structure paragraphs based on the numbered points above.]] [[Make the point that an opinion dynamics model is a combination of 1.) a rule for how an individual changes their opinion when an update occurs and 2.) a rule for which nodes update at a given point in time]] 
+
+The concern of this document is how the factors 2.) and 3.) above, i.e. the structure of an individual's social network and the frequency of communication, affects the component 1.) above, the time scale of opinion formation, under the following assumptions:
+\begin{enumerate}[label=\textbf{A\arabic*}]
+	\item Opinions are represented by real numbers, and the distance between two groups of opinions is given by the Euclidean distance.\label{enum:ass1}
+	\item Communication occurs between pairs of individuals.\label{enum:ass2}
+	\item When a pair communicates, they come to a consensus, meaning that the pair of nodes has the same opinion.\label{enum:ass3}
+	\item The resulting new opinions of the individuals in the social network, including the particular consensus agreed upon by the communicating pair of individuals, after communication between a pair of nodes minimizes the distance between the old opinions and any new opinion. In other words, the individuals in the network, including the communicating pair, are assumed to change their opinions as little as possible when a pair of nodes comes to a consensus.\label{enum:ass4} 
+\end{enumerate}
+[[What is the sociological precedent for these assumptions? 1. is a property of the ``setting'' in which individuals update (online social network, in person, etc.), 2. is a property of the opinions and the distance models how individuals perceive how different opinions are from one another, 3. assumes that communication between individuals results in a consensus between the individuals (in what situations might this hold?), and 4. Assumes that individuals wish to change their opinions as little as possible.]]
+
+As will be shown later, the assumptions above can be used to derive how the opinions of the nodes in the network change upon an update by a pair of nodes. To complete the model, one must specify the time-dynamics: 1.) when do updates occur and 2.) which nodes communicate when an update occurs. The assumptions made in this document have the effect that results in terms of the discrete number of updates can be converted to results about continuous time; in other words, the results depend only on the events and their ordering rather than the time intervals between events. Accordingly, specification of 2.) is all that is required.    
+
+The opinion dynamics model, consisting of an update rule derived using the assumptions \ref{enum:ass1}-\ref{enum:ass4} and a rule for choosing which nodes communicate, converges to an even consensus, meaning that the opinions of the nodes in the network converge to the same value and that the value is the average of the initial opinions of the nodes, under mild assumptions on which pairs of nodes communicate and on the network. In this document, we investigate the time-scale of convergence to consensus under the assumption that the nodes are ``information-seeking,'' meaning that the nodes communicate more often with nodes that have an opinion that is more different than their own opinion. The particular communication model we use to investigate the affect of this assumption completes the opinion dynamics model by determining the pair of nodes that communicate at an update time.
+
+[[TODO: Summary of results in this document about information seeking-behavior.]]
+
+\section{Model and General Results}{\label{sec:modelGenResult}}
+\subsection{Derivation of Update Rule}
+%TODO: stuff.
+Let $G$ be a connected undirected graph with vertex set $\mathcal{V}(G)$ of size $n$ and edge set $\mathcal{E}(G)$ of size $m$. We assume that $G$ will be sufficent as a model of the social network we study. Denote by $x_i(t)$ the opinion of node $i$ at time $t$ and denote the vector of all $x_i(t)$ for the nodes in the graph by $x(t)$. As stated in \ref{enum:ass1}, we assume that $x_i(t)\in\R$. We assume that update events are generated by a Poisson process.  As stated in the appendix [[reference here]], this assumption allows us to develop results for discrete time opinion dyanmics, and then later adapt these discrete time results to the continuous time setting. Accordingly, assume that a countable sequence of update times $0=t_0<t_1<\cdots$ is given and denote $x_i(k) = x_i(t^k)$. Denote by $M\in\{-1,0,1\}^{2m\times n}$ the incidence matrix, where the rows are indexed by directed edges, and define the incidence matrix by
+\begin{equation}
+	M_{(i,j),k} =
+	\begin{cases}
+		+1 & \text{if } k=i\\
+		-1 & \text{if } k=j\\
+		0 & \text{if } k\not\in\{i,j\}
+	\end{cases}
+	.
+\end{equation}
+Lastly, denote $I_{ij}\in\{0,1\}^{2\times 2m}$ a matrix whose rows are the columns of the identity matrix $I\in\{0,1\}^{2m\times 2m}$ corresponding to the directed edges $(i,j)$ and $(j,i)$. 
+
+\begin{equation}{\label{eq:updateConsensusConstraint}}
+	I_{ij}^TMx(k) = 0.
+\end{equation}
+Assumptions \ref{enum:ass1} and \ref{enum:ass4} imply that the vector of opinions $x(k)$ must minimize $\|x(k)-x(k-1)\|_2$ with $x(k-1)$ fixed, which when combined with the constraint \eqref{eq:updateConsensusConstraint} defines $x(k)$ as satisfying 
+\begin{equation}{\label{eq:xUpdateDefnMin}}
+	x(k) = \argmin_{x\in\R}\{\|x-x(k-1)\|^2_2 : I_{ij}^TMx=0\}.
+\end{equation}
+From equation \eqref{eq:xUpdateDefnMin}, it's immediate that if nodes $i$ and $j$ communicate at time $t$, the new opinion values on the network are given by
+\begin{equation}{\label{eq:xUpdateDefn}}
+	x_l(k) =
+	\begin{cases}
+		\frac{x_i(k-1)+x_j(k-1)}{2} & \text{if } l\in\{i,j\}\\
+		x_l(k-1) & \text{if } l\not\in\{i,j\}
+	\end{cases}.
+\end{equation}
+Equation \eqref{eq:xUpdateDefn} defines how opinions in the network change when a pair of nodes $i$ and $j$ communicate.
+
+\subsection{Key Definitions and Implications of the Update Rule \eqref{eq:xUpdateDefn}}
+
+Denote $X(0)=X$ a random vector of initial opinions on the network and denote
+\begin{equation}
+	X_{\text{ave}} = \frac{X^T1_n}{n},
+\end{equation}
+where $1_n\in\{1\}^{n\times1}$ is the vector of all ones, the average value of the initial opinions.
+
+We consider the following three aggregate quantities over the graph $G$ for measuring the total difference in opinion between the individuals in the graph:
+\begin{definition}{\label{defn:discordance}}
+	Denote and define the \textit{discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	d(X,t|G) = \sum_{i,j=1}^nA_{ij}(X_i(t)-X_j(t))^2 = \|MX(t)\|_2^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:totalDiscordance}}
+	Denote and define the \textit{total discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by
+\begin{equation*}
+	d(X,t)= \sum_{i,j=1}^n(X_i(t)-X_j(t))^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:consensusError}}
+	Denote and define the \textit{consensus error} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	e(X,t) = \|X(t)-X_{\text{ave}}\mathbf{1}\|^2_2.
+\end{equation*}
+\end{definition}
+
+%Additionally, we will study the case where each node $i\in\mathcal{V}(G)$ is associated with a random variable $X_i(t)$. Accordingly, we make the following definitions analogous to definitions \ref{defn:discordance}, \ref{defn:totalDiscordance}, and \ref{defn:consensusError}: 
+%\begin{definition}{\label{defn:expectedDiscordance}}
+%	Denote and define the \textit{expected discordance} of the nodes $i\in\mathcal{V}(G)$ with random variables $X_i(t)$ by
+%\begin{equation*}
+%	d(X,t|G) = \E[\sum_{i,j=1}^nA_{ij}\E[(X_i(t)-X_j(t))^2] = \E[\|MX(t)\|^2_2].
+%\end{equation*}
+%\end{definition}
+%
+%\begin{definition}{\label{defn:expectedTotalDiscordance}}
+%	Denote and define the \textit{total expected discordance} of the nodes $i\in\mathcal{V}(G)$ with random variables $X_i(t)$ by
+%\begin{equation*}
+%	d(X,t)= \E[\sum_{i,j=1}^nA_{ij}(X_i(t)-X_j(t))^2].
+%\end{equation*}
+%\end{definition}
+%\begin{definition}{\label{defn:expectedConsensusError}}
+%	If $X_i(t)$ are random variables, we define the \textit{expected consensus error} by
+%\begin{equation*}
+%	e(X,t) = \E[\|X(t)-X_{\text{ave}}\mathbf{1}\|^2_2],
+%\end{equation*}
+%\end{definition}
+
+%Since the deterministic quantities in definitions \ref{defn:discordance}-\ref{defn:consensusError} are special cases of the expected quantities in definitions \ref{defn:expectedDiscordance}-\ref{defn:expectedConsensusError}, we will consider only the quantities \ref{defn:expectedDiscordance}-\ref{defn:expectedConsensusError} for the remainder of the document. 
+We first show the following simple relationship between the total discordance and the consensus error, which shows that they are measuring the same thing.
+\begin{proposition}{\label{prop:discErrorRelationship}}
+	The total discordance in definition \ref{defn:totalDiscordance} is related to the consensus error \ref{defn:consensusError} by 
+\begin{equation*}
+d(X,t) = 2ne(X,t).
+\end{equation*}
+\end{proposition}
+\begin{proof}
+We omit the time $t$ in the following calculation for brevity:
+\begin{align}
+d(X) &= \sum_{i,j=1}^n(X_i-X_j)^2 \nonumber\\
+&= \sum_{i,j=1}^n(X_i-X_{\text{ave}})^2 + \sum_{i,j=1}^n(X_j-X_{\text{ave}})^2 - 2\sum_{i,j=1}^n(X_i-X_{\text{ave}})(X_j-X_{\text{ave}}) \label{prop:eq:der1}\\
+&= 2ne(X) -  2(nX_{\text{ave}}-nX_{\text{ave}})(nX_{\text{ave}}-nX_{\text{ave}})\label{prop:eq:der2}\\
+&= 2ne(X).
+\end{align}
+where in \eqref{prop:eq:der1} use $X_i-X_j = X_i - X_{\text{ave}} + X_{\text{ave}} - X_j$ and in \eqref{prop:eq:der2} we pass the sums inside $(X_i-X_{\text{ave}})(X_j-X_{\text{ave}})$.
+\end{proof}
+
+The next proposition shows how the total discordance, or equivalently the total consensus error by proposition \ref{prop:discErrorRelationship}, changes when an update occurs.  We phrase the proposition in terms of an update rule that is a bit more general than in other plaes in this document: we consider update schemes such that if nodes $p$ and $q$ update at time $t$, then for $\alpha_k+\beta_k=1$,
+\begin{equation}{\label{eq:generalUpdateRule}}
+X_p(k+1) = \alpha_kX_p(k) + \beta_kX_q(k) \qquad X_q(k+1) = \beta_kX_p(k) + \alpha_kX_q(k).
+\end{equation}
+$\alpha_k$ gives the fraction of information nodes $p$ and $q$ retain at the update, and $\beta_k$ gives the fraction of information nodes $p$ and $q$ adopt from the node they are updating with. Alternatively, if we let $0<\alpha_k\leq1/2$, we write the \eqref{eq:generateUpdateRule}:
+\begin{equation}{\label{eq:generalUpdateRule2}}
+\begin{aligned}
+	X_p(k+1) &= X_p(k) - \alpha_k\sgn(X_p(k)-X_q(k))\frac{X_p(k)-X_q(k)}{2}\\
+	X_q(k+1) &= X_q(k) + \alpha_k\sgn(X_p(k)-X_q(k))\frac{X_p(k)-X_q(k)}{2}
+\end{aligned}
+\end{equation}
+
+% We make note of the following equalities for the collection of random variables $\{X_i\}_{i=1}^n$:
+% \begin{align}
+% \E[(X_i-X_j)^2] &= \Var[X_i-X_j] + (\E[X_i]-\E[X_j])^2 \label{eq:discVarEquality}\\
+% \E[(\frac{X_p+X_q}{2}-X_j)^2] &= \frac{1}{4}\left(\E[(X_p-X_j)^2] + 2\E[(X_p-X_j)(X_q-X_j)]+\E[(X_q-X_j)^2]\right) \label{eq:discUpdateEquality}
+% \end{align}
+
+% We will study the convergence of an algorithm $\mathcal{A}(P)$ using total discordance.  Denote the total discordance of the collection of random variables $X_i(k)$ by $d_k(X)$.
+
+\begin{proposition}{\label{prop:discChangeImproved}}
+	Assume that the collection of nodes $S\subset\mathcal{V}(G)$ are updated at timestep $k$ via the update rule
+	\begin{equation}
+		x_i(k+1) = \begin{cases}
+			\beta(\frac{\sum_{j\in S}x_j(k)}{|S|}-x_i(k)) & \text{ if } i\in S\\
+			x_i(k) & \text{ otherwise}.
+		\end{cases}
+	\end{equation}
+	Then, the change in error at timestep $k$ is given by
+	\begin{equation}{\label{prop:discChangeImproved:eq:errorDecrease}}
+		e(X,k+1) - e(X,k) = -\frac{\beta(2-\beta)}{|S|}(x^S(k))^TL_{|S|}x^S(k),
+	\end{equation}
+	where $x^S(k)$ denotes the components of $x(k)$ corresponding to the nodes $S$ and where $L_{|S|}$ denotes the unnormalized Laplacian of the complete graph of $|S|$ nodes; i.e.
+	\begin{equation}
+		(x^S)^TL_{|S|}x^S = \frac{1}{2}\sum_{i,j\in S}(x_i-x_j)^2
+	\end{equation}
+\end{proposition}
+\begin{proof}
+	Write the update $x(k+1) = x(k) + \beta(x_\text{ave}^S(k)1_S - x^S(k))$ where
+	\begin{align*}
+		x_\text{ave}^S(k) &= \frac{\sum_{j\in S}x_j(k)}{|S|}\\
+		(1_S)_i &= \begin{cases}
+			1 & \text{ if } i\in S\\
+			0 & \text{ if } i\not\in S
+		\end{cases}\\
+		x^S(k) &= \begin{cases}
+			x_i(k) & \text{ if } i\in S\\
+			0 & \text{ if } i\not\in S.
+		\end{cases}
+	\end{align*}
+	Denote by $L$ the Laplacian matrix of the complete graph. Then,
+	\begin{equation}
+		x(k+1)^TLx(k+1) - x(k)^TLx(k) = 2\alpha x(k)L(x^S_\text{ave}(k)1_S - x^S(k)) + \alpha^2(x_{\text{ave}}^S-x^S)^TL(x_{\text{ave}}^S-x^S).
+	\end{equation}
+	Calculating
+	\begin{equation}
+		(Lx_{\text{ave}}^S(k)1_S)_i = \begin{cases}
+			-\sum_{j\in S}x_j(k) & \text{ if } i \not\in S\\
+			\frac{n-|S|}{|S|}\sum_{j\in S}x_j(k) & \text{ if } i \in S.
+		\end{cases}
+	\end{equation}
+	and
+	\begin{equation}
+		(Lx^S(k))_i = \begin{cases}
+			-\sum_{j\in S}x_j(k) & \text{ if } i\not\in S\\
+			(n-1)x_i(k) - \sum_{j\neq i : j\in S}x_j(k) & \text{ if } i\in S.
+		\end{cases}
+	\end{equation}
+	we find 
+	\begin{equation}
+		L(x_{\text{ave}}(k)1_S - x^S(k)) = \begin{cases}
+			0 & \text{ if } i \not\in S\\
+			\frac{n-|S|}{|S|}\sum_{j\in S}x_j(k) - (n-1)x_i(k) + \sum_{j\neq i: j\in S}x_j(k) & \text{ if } i \in S.
+		\end{cases}
+	\end{equation}
+	Therefore,
+	\begin{align}
+		x^TL(x_{\text{ave}}(k)1_S - x^S(k)) &= \frac{n-|S|}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 - (n-1)\sum_{j\in S}x_j(k)^2 + \sum_{i\in S}\sum_{j\neq i: j\in S}x_j(k)\\
+						    &= \frac{n}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 - \left(\sum_{j\in S}x_j(k)\right)^2 - n\sum_{j\in S}x_j(k)^2 + \sum_{j\in S}x_j(k)^2 + \sum_{i\in S}\sum_{j\neq i : j\in S}x_j(k)\\
+						    &=  \frac{n}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 - \left(\sum_{j\in S}x_j(k)\right)^2 - n\sum_{j\in S}x_j(k)^2 + \left(\sum_{j\in S}x_j(k)\right)^2\\
+						    &=  \frac{n}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 - n\sum_{j\in S}x_j(k)^2\\ 
+	\end{align}
+	Calculating,
+	\begin{equation}
+		x_{\text{ave}}^S1_SLx_{\text{ave}}^S1_S= \frac{n-|S|}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2
+	\end{equation}
+	and
+	\begin{equation}
+		(x^S)^TLx_{\text{ave}}^S1_S = \frac{n-|S|}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2
+	\end{equation}
+	and
+	\begin{equation}
+		(x^S)^TL(x^S) = (n-1)\sum_{i\in S}x_i(k)^2 - \sum_{i\in S}\sum_{j\neq i: j\in S}x_i(k)x_j(k)
+	\end{equation}
+	we find
+	\begin{multline}
+		(x_{\text{ave}}^S1_S - x^S)L(x_{\text{ave}}^S1_S - x^S) = -\frac{n}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 + \left(\sum_{j\in S}x_j(k)\right)^2 + (n-1)\sum_{i\in S}x_i(k)^2 - \sum_{i\in S}\sum_{j\neq i: j\in S}x_i(k)x_j(k)\\
+		=-\frac{n}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2 + n \sum_{i\in S}x_i(k)^2.
+	\end{multline}
+	Therefore,
+	\begin{multline}
+		x(k+1)^TLx(k+1) - x(k)^TLx(k) \\= -n\beta(2-\beta)\left(\sum_{j\in S}x_j(k)^2 - \frac{1}{|S|}\left(\sum_{j\in S}x_j(k)\right)^2\right) = -n\frac{\beta(2-\beta)}{|S|}(x^S)^TL_{|S|}x^S.
+\end{multline}
+Equation \eqref{prop:discChangeImproved:eq:errorDecrease} follows from \eqref{prop:discErrorRelationship}.
+\end{proof}
+
+%\begin{proposition}{\label{prop:discChange}}
+%	Assume that nodes $p,q\in\mathcal{V}(G)$ and $(p,q)\in\mathcal{E}(G)$ are updated at time-step $k$ via the update rule \eqref{eq:generalUpdateRule2}. Then the change in total discordance at time-step $k$ is given by
+%\begin{equation}{\label{prop:eq:discIncrement}}
+%	d(X,k+1)-d(X,k) = -4\alpha_k(1-\alpha_k)n(X_p(k)-X_q(k))^2
+%\end{equation}
+%Equivalently, the consensus error changes as
+%\begin{equation}{\label{prop:eq:errorIncrement}}
+%	e(X,k+1) - e(X,k) = -2\alpha_k(1-\alpha_k)(X_p(k)-X_q(k))^2.
+%\end{equation}
+%\end{proposition}
+%\begin{proof}
+%	We need to consider the difference $d(X,k+1)-d(X,k)$.  Assume that nodes $p,q\in\mathcal{V}(G)$ are updated at timestep $k+1$; thus, the random variables in the calculation below are conditioned on $p,q$ being updated at time $k+1$.  What follows is just a calculation of $d(X,k+1)-d(X,k)$:
+%\begin{align}
+%d(X,k+1)-d(X,k)&= \sum_{i,j=1}^n\left((X_i(k+1)-X_j(k+1))^2-(X_i(k)-X_j(k))^2\right)\nonumber\\
+%&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k+1)-X_j(k))^2-(X_p(k)-X_j(k))^2\right)\nonumber \\
+%&\quad+ 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_q(k+1)-X_j(k))^2-(X_q(k)-X_j(k))^2\right)\\ \nonumber
+%&\quad+ 2\left((X_p(k+1)-X_q(k+1))^2 - (X_p(k)-X_q(k))^2)\right) \nonumber \\
+%&= 2\sum_{\substack{j=1\\j\neq p,q}}^n((\alpha_k X_p(k)+\beta_k X_q(k))-X_j(k))^2 + 2\sum_{\substack{j=1\\j\neq p,q}}^n((\beta_k X_p(k)+ \alpha_k X_q(k))-X_j(k))^2\nonumber\\
+%&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k)-X_j(k))^2+(X_q(k)-X_j(k))^2\right)\\\nonumber
+%&\quad+ 2\left((\alpha_kX_p(k)+\beta_kX_q(k) - (\beta_kX_p(k)+\alpha_kX_q(k))^2 - (X_p(k)-X_q(k))^2\right)\label{prop:discChange:calc1}\\
+%&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\alpha_k^2(X_p(k)-X_j(k))^2 + 2\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k))\right.\nonumber\\
+%&\qquad+ \left.\beta_k^2(X_q(k)-X_j(k))^2\right)+2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\beta_k^2(X_p(k)-X_j(k))^2\right.\nonumber\\
+%&\qquad+ \left.2\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k)) + \alpha_k^2(X_q(k)-X_j(k))^2\right)\nonumber\\
+%&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k)-X_j(k))^2+(X_q(k)-X_j(k))^2\right)\\ \nonumber
+%&\quad- 2\left(1-(\alpha_k-\beta_k)^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc2}\\
+%&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\alpha_k^2(X_p(k)-X_j(k))^2 + 2\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k))\right. \nonumber\\
+%&\qquad+ \left.\beta_k^2(X_q(k)-X_j(k))^2\right) + 2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\beta_k^2(X_p(k)-X_j(k))^2\right. \nonumber\\
+%&\qquad+ \left.2\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k))+ \alpha_k^2(X_q(k)-X_j(k))^2\right) \nonumber\\
+%&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n(\alpha_k^2+2\alpha_k\beta_k+\beta_k^2)(X_p(k)-X_j(k))^2\nonumber\\
+%&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n(\beta_k^2+2\alpha_k\beta_k+\alpha_k^2)(X_q(k)-X_j(k))^2 \\\nonumber
+%&\quad- 2\left(1-(\alpha_k-\beta_k)^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc3}\\
+%&= 4\sum_{\substack{j=1\\j\neq p,q}}^n\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k))\nonumber\\
+%&\quad+ 4\sum_{\substack{j=1\\j\neq p,q}}^n\alpha_k\beta_k(X_p(k)-X_j(k))(X_q(k)-X_j(k)) - 4\sum_{\substack{j=1\\j\neq p,q}}^n\alpha_k\beta_k(X_p(k)-X_j(k))^2\nonumber\\
+%&\quad-4\sum_{\substack{j=1\\j\neq p,q}}^n2\alpha_k\beta_k(X_q(k)-X_j(k))^2 - 2\left(1-(\alpha_k-\beta_k)^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc4}\\
+%&= -4\alpha_k\beta_k\sum_{\substack{j=1\\j\neq p,q}}^n(X_p(k)-X_q(k))^2 - 2\left(1-(\alpha_k-\beta_k)^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc5}\\
+%&= -(4\alpha_k\beta_k(n-2)+2(1-(\alpha_k-\beta_k)^2)[(X_p(k)-X_q(k))^2\label{prop:discChange:calc6}
+%\end{align}
+%Lastly, equation \eqref{prop:eq:errorIncrement} is due to proposition \ref{prop:discErrorRelationship}.
+%\end{proof}
+
+%\begin{corollary}{\label{cor:discChange12}}
+%	Let $p,q\in\mathcal{V}(G)$ such that $(p,q)\in\mathcal{E}(G)$ and assume that the nodes $p$ and $q$ are updated at timestep $k$ via the update rule \eqref{eq:generalUpdateRule} with $\alpha_k=\beta_k=1/2$.  The change in total discordance at timestep $k$ is given by
+%	\begin{equation}
+%		d(X,k+1) - d(X,k) = -n(X_p(k)-X_q(k))^2.
+%	\end{equation}
+%	Equivalently, the change in consensus error at time step $k$ is given by
+%	\begin{equation}
+%		e(X,k+1) - e(X,k) = -\frac{1}{2}(X_p(k)-X_q(k))^2.
+%	\end{equation}
+%\end{corollary}
+%The following corollary is the basis for how we study the convergence to consensus of the opinion dynamics process. 
+%\begin{corollary}{\label{cor:recurrenceRelation}}
+%	Let $\alpha_k=\beta_k=1/2$ in the update rule \eqref{eq:generalUpdateRule}. The expected total discordance satisfies the recurrence relation
+%\begin{equation}{\label{eq:discordanceRecurrence}}
+%d(X,k+1)=(1-\alpha(k|p,q))d_k(X,k)
+%\end{equation}
+%where
+%\begin{equation}{\label{eq:alphaDefn}}
+%\alpha(k|p,q) = \frac{n\cdot(X_p(k)-X_q(k))^2}{d(X,k)} = \frac{(X_p(k)-X_q(k))^2}{2\cdot e(X,k)}.
+%\end{equation}
+%The error satisfies the same recurrence.
+%\end{corollary}
+
+The following corollary is the basis for how we study the convergence to consensus of the opinion dynamics process. 
+\begin{corollary}{\label{cor:recurrenceRelation}}
+	The consensus error satisfies the recurrence relation
+	\begin{equation}\label{eq:discordanceRecurrence}
+		e(X,k+1) = \left(1-\frac{\beta(2-\beta)(x^S(k))^TL_{|S|}x^S(k)}{|S|e(X,k)}\right)e(X,k).
+	\end{equation}
+\end{corollary}
+Denote 
+\begin{equation}{\label{eq:coefficientNotation}}
+	\alpha(x,\beta,S) = \frac{\beta(2-\beta)(x^S(k))^TL_{|S|}x^S(k)}{|S|e(X,k)}
+\end{equation}
+We note that the recurrence is monotonically decreasing:
+\begin{proposition}{\label{prop:monotoneDecreaseRecurrence}}
+	Let $M$ be the first time such that $e_M(X)=0$, where $M=\infty$ if $e_k(X)>0$ for all $k$. The coefficient $\alpha(x,\beta,S)$ from \eqref{cor:recurrenceRelation} satisfies $0\leq \alpha(x,\beta,S) < 1$ for all $k=0,\ldots,M-1$.
+\end{proposition}
+\begin{proof}
+	We have the following inequality
+	\begin{equation}
+		e(X,k) = e(X,k+1) + \frac{\beta(2-\beta)}{|S|}(x^S(k))^TL_{|S|}x^S(k) >  \frac{\beta(2-\beta)}{|S|}(x^S(k))^TL_{|S|}x^S(k)
+	\end{equation}
+	so that
+	\begin{equation}
+		1 > \frac{\beta(2-\beta)(x^S(k))^TL_{|S|}x^S(k)}{|S|e(X,k)} = \alpha(x,\beta,|S|).
+	\end{equation}
+	Certainly $0\leq \alpha(x,\beta,|S|)$.
+\end{proof}
+\begin{enumerate}
+	\item An example of when $e_k(X) = 0$ eventually is for a circle graph of an even number of nodes with the greedy update procedure.
+\end{enumerate}
+
+Corollary \ref{cor:recurrenceRelation} tells us how the consensus error changes at a particular timestep given that a certain group of nodes $S$ updates to consensus. In order to discuss convergence of the opinion dynamics model to consensus, it is required that we specify how a group of nodes is chosen to update. 
+
+\subsection{Communication Rates Between Nodes and Convergence to Consensus}
+
+Denote $\mathcal{C}(G)$ the collection of sets of vertices that form connected subgraphs of $G$. Denote $U(k)\mapsto\mathcal{C}(G)$ the random variable at timestep $k$ determining the collection of vertices to update. Assume that $U(k)$ is independent of $X(l)$ for $l<k-1$ given $X(k)$. Denote $\E_{U(k)}[\cdot]$ the expectation over the random variable $U(k)$. Let $Y\in\mathcal{R}_k$ be a random variable that is a possible value of $X(k)$ at time $k$.
+
+Denote by $\mathcal{O}(U,\beta)$ the opinion dynamics stochastic process of the update rule \eqref{eq:updateRule} with the update random variable $U(k)$. We study convergence of the opinion dynamics model $\mathcal{O}(U,\beta)$ by consider the following definition, which defines a notion of an upper bound on the convergence time.
+    \begin{definition}{\label{defn:epsilonAveraging}}
+	    For all $0<\epsilon<1$, the $\epsilon-$\textit{averaging time} of $\mathcal{O}(U,\beta)$ is denoted by $T_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta))$ and defined by
+    \begin{equation}
+	    T_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta)) = \sup_{x(0)\in\R}\inf_{k\in\mathbb{Z}_+}\left\{\Pr\left(\frac{\|X(k)-X_{\text{ave}}1_n\|}{\|X(0)-X_{\text{ave}}1_n\|}\geq\epsilon\right)\leq\epsilon\right\}
+    \end{equation}
+    \end{definition}
+    Additionally, we make the following definition, which defines a lower bound on the convergence time of $\mathcal{O}(U,\beta)$.
+    \begin{definition}{\label{defn:bestEpsilonAveraging}}
+	    For all $0<\epsilon<1$, the \textit{best} $\epsilon-$\textit{averaging time} of $\mathcal{O}(U,\beta)$ is denoted by $\mathcal{T}_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta))$ and defined by
+    \begin{equation}
+	    \mathcal{T}_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta)) = \inf_{x(0)\in\R}\inf_{k\in\mathbb{Z}_+}\left\{\Pr\left(\frac{\|x(k)-x_{\text{ave}}1_n\|}{\|x(0)-x_{\text{ave}}1_n\|}\geq\epsilon\right)\leq\epsilon\right\}
+    \end{equation}
+    \end{definition}
+    With definitions \ref{defn:epsilonAveraging} and \ref{defn:bestEpsilonAveraging} in mind, we state the following theorem
+\begin{theorem}{\label{theorem:epsilonAverageTime}}
+	Assume that $U=U(k)$ and $\beta = \beta(k)$ are independent of $k$. Denote and define the following quantities
+\begin{align}{\label{theorem:eq:alphaDefn}}
+	\alpha^*(\beta) = \sup_{Y\in\R^n}\E_{U=S}\left[\alpha(Y,\beta,S)\right] \quad & \quad \alpha_*(\beta) = \inf_{\substack{Y\in\R^n\\Y\perp1_n}}\E_{U=S}\left[\alpha(Y,\beta,S)\right]
+\end{align}
+Let $\alpha>0$. The $\epsilon$-averaging time and the best $\epsilon$-averaging time are bounded as follows
+\begin{align}{\label{theorem:eq:epsilonBounds}}
+	T_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta))&\leq \frac{3\log(\epsilon)}{\log(1-\alpha_*(\beta))}\\
+	\mathcal{T}_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta))&\geq \frac{\log(\epsilon)}{\log(1-\alpha^*(\beta))}.
+\end{align}
+\end{theorem}
+
+Theorem \ref{theorem:epsilonAverageTime} is a result of the following bound on the expectation of the consensus error:
+\begin{lemma}{\label{lem:expectationBound}}
+	Assume that $U=U(k)$ and $\beta=\beta(k)$ are independent of $k$. The expectation $\E_{U}\left[e(X,k)]$, which denotes the expectation over the random variables $U(1),U(2),\ldots,U(k)$ of the consensus error at timestep $k$, satisfying the following bound
+\begin{equation}{\label{eq:consensusErrorBound}}
+	(1-\alpha^*(\beta))\E_{U}[e(X,k)] \leq \E_{U}[e(X,k+1)]\leq(1-\alpha_*(\beta))\E_{U}[e(X,k)].
+\end{equation}
+\end{lemma}
+\begin{proof}
+From corollary \ref{cor:recurrenceRelation}, we know that
+\begin{multline}{\label{eq:expectedDiscChange}}
+	\E_{U(k+1)=S}[e(X,k+1)|X(k)=Y] = e(Y,k) - \E_{U(k+1)=S}\left[\frac{\beta(2-\beta)}{|S|}(Y^S)^TL_{|S|}Y^S\right] \\= \left(1 - \E_{U(k+1)=S}\left[\frac{\beta(2-\beta)(Y^S)^TL_{|S|}Y^S}{|S|e(Y,k)}\right]\right)e(Y,k),
+\end{multline}
+Thus, using that $\alpha(Y,\beta,S) = \alpha(Y+c1_n,\beta,S)$ for all $c\in\R$, by \eqref{eq:expectedDiscChange}
+\begin{equation}{\label{eq:intermediateBound}}
+	\left(1-\alpha^*(\beta)\right)e(Y,k)\leq\E_{U(k+1)=S}\left[e(X,k+1)|X(k)=Y\right]\leq\left(1-\alpha_*(\beta)\right)e(Y,k).
+\end{equation}
+Taking the expectation over $U(1),\ldots,U(k)$ of both sides of \eqref{eq:intermediateBound} results in \eqref{eq:consensusErrorBound}.
+\end{proof}
+\begin{proof}[Proof of theorem \ref{theorem:epsilonAverageTime}]
+	By Markov's inequality, lemma \ref{lem:expectationBound}, and the fact that $e(X,k) = e(X+\beta1_n,k)$ for all $\beta\in\R$,
+\begin{equation}{\label{eq:markovInequalityApplication}}
+	\Pr\left(\frac{\sqrt{e(X,k)}}{\sqrt{e(X,0)}}\geq \epsilon\right) \leq \frac{1}{\epsilon^{2}e(X,0)}\E_U[e(X,k)] \leq \epsilon^{-2}(1-\alpha_*(\beta))^k
+\end{equation}
+Thus, the upper bound on the $\epsilon$-averaging time in \eqref{theorem:eq:epsilonBounds} is proven by taking applying $\log(\cdot)$ to both sides of \eqref{eq:markovInequalityApplication}. 
+
+Since $e(X,k)\leq e(X,0)$,
+\begin{equation}{\label{eq:lowerboundInequality}}
+	\Pr\left(\frac{\sqrt{e(X,k)}}{\sqrt{e(X,0)}}>\epsilon\right) \geq \frac{\E[e(X,k)]-\epsilon^2e(X,0)}{e(X,0)-\epsilon^2e(X,0)}
+\end{equation}
+for all $0<\epsilon<e(X,0)$. Additionally, by lemma \ref{lem:expectationBound} and \eqref{eq:lowerboundInequality}
+\begin{equation}{\label{eq:lowerboundInequality2}}
+	\Pr\left(\frac{\sqrt{e(X,k)}}{\sqrt{e(X,0)}}>\epsilon\right)\geq \frac{(1-\alpha^*(\beta))^k-\epsilon^2}{1-\epsilon^2}.
+\end{equation}
+Thus, we see that if
+\begin{equation}
+	k\leq \frac{\log(\epsilon)+\log(1+\epsilon-\epsilon^2)}{\log(1-\alpha^*(\beta))} \leq \frac{\log(\epsilon)}{\log(1-\alpha^*(\beta))}.
+\end{equation}
+then
+\begin{equation}
+	\Pr\left(\frac{\sqrt{e(X,k)}}{\sqrt{e(X,0)}}>\epsilon\right)\geq \frac{(1-\alpha^*(\beta))^k-\epsilon^2}{1-\epsilon^2} \geq \epsilon,
+\end{equation}
+which is the lower bound we needed to prove.
+\end{proof}
+
+\section{Insights into Group Updating}
+
+In this section, we use the results from previous sections to gain insight into the effects of group updates on reaching convergence.
+%We model bias in this document through the stochastic process $U(k)\mapsto\mathcal{E}(G)$, which is the stochastic process that generates communication events between adjacent pairs of individuals in the network. Assign to each individual $i$ in the network a variable $Z_i(k)$, which encaptures the characteristics of the individual $i$ at time $k$ that may result in another individual $j$ being biased against $i$. For example, $Z_i(k)$ could hold the political affiliation of an individual, the reputation of an individual as a source of information, the opinion/information of the individual, etc.. If $U(k)$ at time $k$ depends on the variable $Z(k)$, then we say that the network has a communication bias.
+
+The following corollary considers the effect of increasing the size of the group being updated on convergence to consensus.
+\begin{corollary}{\label{cor:timeHomogeneousComm}}
+	Suppose that $U(k) = U$ and $\beta(k) = \beta$ are independent of $k$. Further assume that $|U| = k$ is fixed; i.e., we assume that $U$ may only return subgraphs of a fixed size $k$. Construct the matrix $P\in[0,1]^{n\times n}$ of probabilities 
+	\begin{equation}
+		P_{ij} = \Pr((i,j)\in U).
+	\end{equation}
+	and let $Q\in[0,1]^{2m\times 2m}$ be a diagonal matrix with $Q_{(i,j)} = \sqrt{P_{ij}}$. Additionally, denote $M\in\{-1,0,1\}^{2m\times n}$ the incidence matrix of the graph $G$ and let $W$ be the matrix
+	\begin{equation}{\label{eq:homogeneousWDefn}}
+		W(\beta) = I - \frac{\beta(2-\beta)}{2k}(QM)^*QM.
+	\end{equation}
+	Denote $\sigma_{k}(\cdot)$ the $k^{th}$ singular value in decreasing order of matrix and denote $\lambda_{k}(\cdot)$ the $k^{th}$ eigenvalue in decreasing order of a matrix. We find that 
+	\begin{align}
+		1-\alpha_*(\beta) = 1-\frac{\beta(2-\beta)}{2k}\sigma_{n-1}(QM)^2 = \lambda_2(W(\beta))\quad & \quad 1-\alpha^*(\beta) = 1-\frac{\beta(2-\beta)}{2k}\sigma_1(QM)^2 = \lambda_{n}(W(\beta))
+	\end{align}
+	and
+	\begin{align}
+		T_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta)) &\leq \frac{3\log(\epsilon)}{\log(\lambda_2(W(\beta)))} = \frac{3\log(\epsilon)}{\log(1-\frac{\beta(2-\beta)}{2k}\sigma_{n-1}(QM)^2)}\\
+		\mathcal{T}_{\text{ave}}(\epsilon,\mathcal{O}(U,\beta)) &\geq \frac{\log(\epsilon)}{\log(\lambda_n(W(\beta)))} = \frac{\log(\epsilon)}{\log(1-\frac{\beta(2-\beta)}{2k}\sigma_{1}(QM)^2)}.
+	\end{align}
+	Additionally, we have the following recursive bound on $\E_U[e(X,k)]$:
+	\begin{multline}
+		(1-\frac{1}{2}\sigma_{1}(QM)^2)\E_U[e(X,k)] = \lambda_{n}(W)\E_U[e(X,k)] \\\leq \E_U[e(X,k+1)] \leq \lambda_2(W)\E_U[e(X,k)] = (1-\frac{1}{2}\sigma_{n-1}(QM)^2)\E_U[e(X,k)]
+	\end{multline}
+\end{corollary}
+\begin{proof}
+	The corollary is a result of the following observations. The first is that
+	\begin{equation}
+		\frac{\E_{U=S}\left[(Y^S)^TL_{|S|}Y^S\right]}{e(Y,k)} = \frac{\|QMY\|^2_2}{2\|Y\|^2_2}
+	\end{equation}
+	is a Rayleigh quotient.  The second is that 
+	\begin{equation}
+		1 - \frac{\|QMY\|^2_2}{\|Y\|^2_2} = \frac{Y^T(I-(QM)^*QM)Y}{\|Y\|^2_2} = \frac{Y^TWY}{\|Y\|_2^2}.
+	\end{equation}
+\end{proof}
+
+
+
+%In corollary \ref{cor:timeHomogeneousComm}, we assume that $U(k)$ is independent of time, which in particular implies that $U(k)$ is independent $X(k)$. The following corollary considers a case where $U(k)$ depends on the values $X(k)$ of the nodes on the graph. In this case, we say that the social network has an \textit{information bias}. In particular, the corollary considers an extreme case, in which $Z(k) = X(k)$, and where $U(k)$ generates the pair of adjacent nodes whose values differ the most in the network. The situation in this corollary is an example of a social network being \textit{information-seeking}, where individuals prefer to communicate with nodes that have information that is more different than their own. 
+%\begin{corollary}{\label{cor:maxNormAlpha}}
+%	Suppose that $U(k)$ is deterministic given $X(k)$; in particular, 
+%	\begin{equation}{\label{ex:maxNormAlpha:U(k)Form}}
+%		U(k) = \argmax_{(p,q)\in\mathcal{E}(G)}(X_p(k)-X_q(k))^2.
+%	\end{equation}
+%	In this case, we have
+%	\begin{align}
+%		\alpha^* &= \frac{1}{2}\sup_{\substack{Y\in\R^n}}\frac{\|MY\|_\infty^2}{\|Y\|_2^2} = 1 \\
+%		\alpha_* &= \frac{1}{2}\inf_{\substack{Y\in\R^n\\Y\perp1_n}}\frac{\|MY\|_\infty^2}{\|Y\|_2^2}:= \frac{1}{2}\sigma(M,\infty)^2,
+%	\end{align}
+%	The error bound \eqref{eq:consensusErrorBound}, is then
+%	\begin{equation}
+%		0 \leq \E_U[e(X,k+1)] \leq \left(1-\frac{1}{2}\sigma(M,\infty)^2\right)\E_U[e(X,k)]
+%	\end{equation}
+%\end{corollary}
+%\subsubsection{Computation of $\sigma(M,\infty)$}
+%Let $Y = M^TZ$. Note that $Y\perp1_n$ since $1_n^TM^T = (M1_n)^T = 0$. We use the following fact:
+%\begin{lemma}{\label{lem:representFully}}
+%	Let $G$ be a connected graph and let $M\in\{-1,0,1\}^{2m\times n}$ be the incidence matrix of $G$. Then $\rng(M^T) = \{1_n\}^\perp$.	
+%\end{lemma}
+%\begin{proof}
+%	It is well known that the Laplacian $L = M^TM$ of a connected graph has $0$ as an eigenvalue with eigenvector $1_n$ and with geometric multiplicity $1$. In other words, $\ker(L) = \{1_n\}$. Now, $\rng(L) = \rng(L^*) = \ker(L)^\perp = \{1_n\}^\perp$, $\rng(L)\subset\rng(M^T)$, and $1_n^TY=1_n^TM^TZ=0$ since $1_n\in\ker(M)$ together imply the lemma. 
+%\end{proof}
+%Lemma \ref{lem:representFully} implies that the following equality holds
+%\begin{equation}{\label{eq:sigmaDefn}}
+%	\sigma(M,\infty)^2 = \inf_{Z\in\R^n}\frac{\|MM^TZ\|^2_\infty}{\|M^TZ\|^2_2}.
+%\end{equation}
+%
+%Denote by $\mathcal{A}\subset\mathcal{E}(G)$ the ``active set'' of edges, defined as the set of edges $(i,j)\in\mathcal{E}(G)$ such that
+%\begin{equation}
+%	(x_i-x_j)^2 = \|MX\|_\infty^2.
+%\end{equation}
+%Denote $I_{\mathcal{A}}\in\{0,1\}^{2m\times|\mathcal{A}|}$ a matrix whose columns are the columns of the identity matrix indexed by $e\in\mathcal{A}$.  
+%One can consider an interesting minimization scheme for finding (local) minima of \eqref{eq:sigmaDefn} in which the variable $Z_{(i,j)}$, where $(i,j)$ is a directed edge of the graph $G$, gives the amount of ``flow'' form $i$ to $j$.  Subgradient descent applied to the numerator of the quotient in \eqref{eq:sigmaDefn} 
+
+%TODO: write out algorithm!  Apply algorithm to an example.  Show results. Do before noon tomorrow hopefully...
+
+%We consider opinion dynamics models in which an initial opinion $x_i(0)\in\R$ is assigned to each node $i$, and through the exchange of information among the nodes of the graph, the value $x_i(t)$ at node $i$ is updated in such a way that
+%\begin{equation}{\label{eq:consensusConvergence}}
+%\lim_{t\to\infty}x_i(t)=\frac{\sum_{i=1}^nx_i(0)}{n}.
+%\end{equation}
+%In other words, we consider models that converge to an even consensus in which each opinion is equally represented in the final consensus opinion.  In particular, we consider gossip-based opinion dynamics, in which an update to the value $x_i(t)$ only depends on the values of neighboring nodes $j\in\mathcal{N}(i)$.  Further we will not allow for group updates, in which a subgraph of connected nodes of $G$ is updated; instead, we will assume updates only occur between pairs of nodes.
+%
+%We define the update scheme for our opinion dynamics model.  The update scheme involves both 1.) how a pair of nodes changes their values upon update and 2.) how pairs of nodes are chosen to be updated.  To address 1.), we assume that when a pair of nodes $(i,j)$ is updated at time $t$ they come to consensus by each adopting the average of their previous values: 
+%\begin{equation}{\label{eq:updateRule}}
+%	x_i(t)=x_j(t)=(x_i(t-1)+x_j(t-1))/2.
+%\end{equation}
+%Assuming that each pair of nodes is updated infinitely often, one can show that such a model will satisfy \eqref{eq:consensusConvergence}.  The update rule \eqref{eq:updateRule} was studied extensively in \cite{boydrandomized2006} in the context of distributing averaging algorithms for distributed computation.  
+%\begin{enumerate}
+%	\item Include connection with DeGroot learning and other models: in expectation, an individual's opinion is a weighted average of their neighbors beliefs.	
+%\end{enumerate}
+%For 2.), we will assume that individuals are ``information seeking,'' in the sense that individuals update more frequently with other individuals who have opinions that are more different than their own opinion.  In particular, we will consider a discrete-time update scheme where the next pair of nodes updated are exactly the pair that have the greatest difference in opinion on the network.
+%\begin{enumerate}
+%\item Need to include social information here about whether this kind of behavior is observed between individuals.
+%\end{enumerate}
+%
+%Need to do the following
+%\begin{enumerate}
+%\item Include information about echo chambers.
+%\item Have people studied the question of communication rates and their effect on time to consensus?
+%\item The effect is not as large for ``well-mixed'' initial data.  Is it still important?
+%\item The effect is not as large for ``un-clustered'' networks.  Is it still important?
+%\end{enumerate}
+%This paper is the first time that the effect of time-dependent communication rates on consensus time has been considered [[placeholder for when I know the social literature better]]
+%
+%As mentioned previously, the model we study originated in the design of algorithms for distributed averaging in communication networks of computers [[lots of citations]].  The focus of this research was to study and design fast algorithms in which computers only communicate with neighboring computers and asymptotically come to compute the average of the values owned by each computer.  Additionally, this research has generally focused on the case in which nodes communicate with one another at rates that are constant in time, as presented in \cite{boyd2006randomized}.  In addition to the social interpretation, the model we consider can also be used as an algorithm for fast distributed averaging in networks of computers.  We show that although each node must communicate more often with its neighbors, the accelerated convergence can be worth the extra communication required.
+%\begin{enumerate}
+%\item Each node must communicate with all of its neighbors in order to determine which neighbor to communicate with.  Need to determine when this extra communication is justified.  Does the algorithm converge in a fraction $1/\bar{k}$ steps of the number of steps required for a uniform algorithm to converge?  If so, then it may be worth it.
+%\end{enumerate}
+%
+%To begin discussing the model mathematically, we make some definitions.  
+%
+%\begin{definition}
+%We say a collection $\mathcal{C}$ of nodes are \textit{information-seeking} if the rate at which nodes $i,j\in\mathcal{C}$ update is monotonically increasing with the discordance of $i$ and $j$.
+%\end{definition}
+%
+%\section{The Model}{\label{sec:Model}}
+%\subsection{Background}
+%
+%We summarize the asynchronous gossip model considered in \cite{boyd2006randomized}.
+%
+%\subsubsection{General Description of the Model}
+%
+%We associate to each edge $(i,j)\in\mathcal{E}(G)$ a Poisson process $Y^{ij}_t$ of rate $\lambda_{ij}(t)$.  We assume the Poisson processes $Y^{ij}_t$ are independent.  Due to the independence properties of Poisson processes, we can consider an event on the edge $(i,j)$ being generated in three different ways:
+%\begin{enumerate}[label=\arabic*.]
+%\item \label{enum:AsyncMethod1} One considers the $2m$ distinct Poisson processes $Y^{ij}_t$ for each directed edge $(i,j)$ and generates events via these Poisson processes.
+%\item \label{enum:AsyncMethod2} One considers $n$ Poisson processes $Y^{i}_t$, where $Y^{i}_t$ has rate
+%\begin{equation}
+%\lambda_i(t) = \sum_{j=1}^nA_{ij}\lambda_{ij}(t),
+%\end{equation}
+%and generates events via these Poisson processes.  If an event is generated by Poisson process $Y^{i}_t$ at time $t$, it is assigned to the edge $(i,j)$ with probability
+%\begin{equation}{\label{eq:pijtDefn}}
+%p_{ij}(t) = \frac{\lambda_{ij}(t)}{\lambda_i(t)}.
+%\end{equation}
+%\item \label{enum:AsyncMethod3} One generates events via the single Poisson process $Y_t$ of rate
+%\begin{equation}
+%\lambda_t = \sum_{i,j=1}^nA_{ij}\lambda_{ij}(t).
+%\end{equation}
+%When an event is generated by $Y_t$ at time $t$, it is assigned to the edge $(i,j)$ with probability
+%\begin{equation}
+%\frac{\lambda_{ij}(t)}{\lambda(t)},
+%\end{equation}
+%or equivalently, an event generated by $Y_t$ at time $t$ is assigned to the node $i$ with probability
+%\begin{equation}
+%p_i(t) = \frac{\lambda_i(t)}{\lambda(t)},
+%\end{equation}
+%and then further assigned to edge $(i,j)$ with probability $p_{ij}(t)$.
+%\end{enumerate}
+%{}
+%Let $x_i(t)$ be node $i$'s estimated average at time $t$ and let $\mathbf{x}(t)$ be the vector of these averages.  If an event occurs on the edge $(i,j)$ at time $t$, then we update $x_i(t)$ and $x_j(t)$ to their average:
+%\begin{equation}{\label{eq:updateRule}}
+%x_i(t)=x_j(t)=\frac{x_i(t-)+x_j(t-)}{2}.
+%\end{equation}
+%If we define $\mathbf{x}(t)$ as the vector of $x_i(t)$, we can represent the update \eqref{eq:updateRule} as
+%\begin{equation}
+%\mathbf{x}(t) = W(t)\mathbf{x}(t-),
+%\end{equation}
+%where $W(t)$ is the matrix with $W_{ii}(t)=W_{jj}(t)=1/2$, $W_{kk}(t)=1$ for $k\not\in\{i,j\}$, $W_{ij}(t)=W_{ji}(t)=1/2$, and all other entries $0$.  It is convenient to represent $W(t)$ as
+%\begin{equation}
+%W(t) = I-\frac{(e_i-e_j)(e_i-e_j)^T}{2}.
+%\end{equation}
+%
+%[[I don't know if it will be necessary to consider this matrix perspective in this document.]]
+%
+%As justified in \cite{boyd2006randomized} [[I need to either use their exact assumption of a homogeneous total communication rate or see if their results can be extended to allow for an inhomogeneous total communication rate]], we can study the model by the discrete-time process at the event times $\{t_k\}_{k=1}^\infty$.  [[The idea is to use the fact that the total number of events generated by $Y_t$ is tightly concentrated around its mean.  Thus, the averaging time in terms of the number of events $k$ can be related to the absolute time of the process.]]  Accordingly, denote
+%\begin{equation}{\label{eq:embeddedNotation}}
+%\begin{aligned}
+%\mathbf{x}(k) &= \mathbf{x}(t^k)\\
+%W(k) &= W(t^k).
+%\end{aligned}
+%\end{equation}
+%The update rule \eqref{eq:updateRule} can then be represented by the discrete-time equation
+%\begin{equation}{\label{eq:embeddedUpdateRule}}
+%\mathbf{x}(k) = W(k)\mathbf{x}(k-1).
+%\end{equation}
+%
+%The algorithm defined above is completely defined by the transition probabilities $p_{ij}(t)$.  We define the matrix $P(t)$ with entries $P_{ij}(t)=p_{ij}(t)$ and denote by $\mathcal{A}(P)$ the algorithm defined by the function $P:\R_+\to[0,1]^{n\times n}$.
+%
+%\subsubsection{Convergence Time}
+%
+%We assume that $P$ is constant in time [[as satisfies a few other assumptions that need to be stated here]].
+%The convergence time of our algorithm will be studied via the quantity defined as follows.
+%\begin{definition}{\label{cor:epsilonAveragingDefinition}}
+%For all $0<\epsilon<1$, the $\epsilon-$averaging time of an algorithm $\mathcal{A}(P)$ is denoted by $T_{\text{ave}}(\epsilon,P)$ and defined by
+%\begin{equation}
+%T_{\text{ave}}(\epsilon,P) = \sup_{\mathbf{x}(0)\in\R_+^n}\inf_{t>0}\left\{\Pr\left(\frac{\|\mathbf{x}(t)-x_{\text{ave}}\mathbf{1}\|}{\|\mathbf{x}(0)\|}\geq\epsilon\right)\leq\epsilon\right\}
+%\end{equation}
+%\end{definition}
+%
+%The following bounds on the averaging time are given in \cite{boyd2006randomized}
+%\begin{corollary}{\label{cor:BoydAveragingTime}}
+%For large $n$ and symmetric $P$, $T_{\text{ave}}(\epsilon,P)$ is bounded as follows:
+%\begin{align}
+%T_{\text{ave}}(\epsilon,P)&\leq\frac{3n\log(\epsilon^{-1})}{1-\lambda_2(P)}\label{eq:BoydAveragingUB}\\
+%T_{\text{ave}}(\epsilon,P)&\geq\frac{0.5n\log(\epsilon^{-1})}{1-\lambda_2(P)}.\label{eq:BoydAveragingLB}
+%\end{align}
+%\end{corollary}
+%
+%From \eqref{eq:BoydAveragingUB} and \eqref{eq:BoydAveragingLB} we see that the $\epsilon$-averaging time is linear in the size of the network.  Additionally, it depends on the ``spectral-gap,'' which is given by $1-\lambda_2(P)$.  
+%
+%\begin{enumerate}
+%\item The $\epsilon$-averaging time is certainly linear in $n$ if the diameter is of order $n$.  For graphs in which the diameter is order $\log(n)$, say, then faster convergence is possible.
+%\item What analogous bounds can be found for our information-seeking algorithm?  How bad can the bounds be for our information-adverse model? 
+%\end{enumerate}
+%
+%\subsection{Description of Information-Seeking Behavior}
+%
+%We define information-seeking behavior in two ways:
+%\begin{enumerate}[label=\arabic*.]
+%\item Relative to an individual.  When an individual updates, it does so with the neighbor whose information differs the most from their own information, i.e. if node $i$ updates at time $t$ it do so with node
+%\begin{equation}{\label{eq:commRelIndividual}}
+% \argmax_{j\in\mathcal{N}(i)}(x_i(t)-x_j(t))^2.
+%\end{equation}
+%\item Relative to the network.  In this case, individuals communicate more frequently if their neighbors have information very different from their own.  In particular, we assume node $i$ updates at the rate
+%\begin{equation}{\label{eq:commRelNetwork}}
+%\lambda_i(t) = \sum_{j\in\mathcal{N}(i)}(x_i(t)-x_j(t))^2.
+%\end{equation}
+%\end{enumerate}
+%
+%\section{Theory}
+%
+%Suppose each node $i$ in a graph $G$ is assigned a value from a random variable $X_i(0)$, where $X_i(0)$ for different $i$ are independent.  We consider the continuous time-stepping scheme defined in section \ref{sec:Model}.  In particular, we consider the perspective of \ref{enum:AsyncMethod3}: events are generated on the network via a Poisson process of rate $\lambda(t)$, and the probability the $k^{th}$ event, generated at time $t_k$, updates edge $(i,j)$ is given by $p_{ij}(t)=(\lambda_{ij}(t)+\lambda_{ji}(t))/\lambda(t)$.  Denote $X_i(k)$ the random variable at node $i$ at the $k^{th}$ event time.
+%
+%\subsection{Relationship between discrete and continuous time}
+%
+%Need to state how convergence in terms of number of events $k$ relates to convergence in time $t$.
+%
+%\subsection{Characterization as an optimization problem}
+%
+%Following \cite{loizou2016new}, we formulate the consensus dynamical process as an application of the Kaczmarz algorithm.  Indeed, we consider the constrained least-squares problem
+%\begin{equation}{\label{eq:lsGossipProblem}}
+%\min_{x\in\R^n}\|x-c\|_2^2 \qquad Ax=0,
+%\end{equation}
+%where $$A\in\{-1,0,1\}^{|\mathcal{E}|\times n}$$ is given by
+%\begin{equation}{\label{eq:Adefn}}
+%[A]_{(i,j),k} =
+%\begin{cases}
+%1 & \text{if } k=i\\
+%0 & \text{if } k\not\in\{i,j\}\\
+%-1 & \text{if } k=j.
+%\end{cases}
+%\end{equation}
+%where the rows of $A$ are indexed by the directed edges $(i,j)$ of $G$.  In other words, the constraint $Ax=0$ says that adjacent nodes in $G$ must have the same values, and since the graph is assumed to be connected, this implies that all nodes must have the same value.  Since the minimization of $\|x-c\|_2^2$ for $x$ of the form $\alpha\mathbf{1}$, as implied by the constraint $Ax=0$, occurs when $\alpha = c_{\text{ave}}$, we see that the solution of \eqref{eq:lsGossipProblem} is exactly the vector $c_{\text{ave}}\mathbf{1}$.
+%
+%To solve \eqref{eq:lsGossipProblem} we use block Kaczmarz method.  We define the dual problem
+%\begin{equation}{\label{eq:lsGossipDualProblem}}
+%\max_{y\in\R^m}D(y) = -\min_{y\in\R^m}\left(c^TA^Ty + \frac{1}{2}\|A^Ty\|_2^2\right)
+%\end{equation}
+%and solve \eqref{eq:lsGossipDualProblem} using an iteration of the form
+%\begin{equation}
+%y^{k+1} = y^k + S_k\lambda^k,
+%\end{equation}
+%where $S_k = I_{s_k}$ is a collection of the columns of the identity matrix corresponding to the nodes associated with a collection of edges, which we denote $s_k$, and where $\lambda^k$ is a maximum improvement (MI) step-size
+%\begin{equation}{\label{eq:MIStepsize}}
+%\lambda^k \in \argmax_{\lambda>0}D(y^{k}+S_k\lambda^k).
+%\end{equation}
+%
+%In general, \eqref{eq:MIStepsize} does not have a unique solution, so we take $\lambda^k$ to be the least-norm element satisfying \eqref{eq:MIStepsize}, which gives us the formula
+%\begin{equation}{\label{eq:dualSDAlambda}}
+%\lambda^k = -(S_k^TAA^TS_k)^\dagger S_k^TA(c+A^Ty^k).
+%\end{equation}
+%Therefore, the full dual update is given by
+%\begin{equation}{\label{eq:SDAUpdate}}
+%y^{k+1} = y^k-R_kA(c+A^Ty^k),
+%\end{equation}
+%where
+%\begin{equation}{\label{eq:dualSDARk}}
+%R_k = S_k(S_k^TAA^TS_K)^\dagger S_k^T.
+%\end{equation}
+%Defining [why define this way?]
+%\begin{equation}{\label{eq:primalSDAxk}}
+%x^k = c+A^Ty^k,
+%\end{equation}
+%we obtain the primal iteration
+%\begin{equation}{\label{eq:primalSDAiteration}}
+%x^{k+1}=x^k-A^TR_kAx^k.
+%\end{equation}
+%
+%The equation \eqref{eq:primalSDAiteration} defines the block Kaczmarz iteration.  One can further show that the iteration \eqref{eq:primalSDAiteration} is characterized by
+%\begin{equation}{\label{eq:primalSDAcharacterization}}
+%x^{k+1} = \argmin_{x\in\R^n}\{\|x-x^k\|^2:S_k^TAx=0\}.
+%\end{equation}
+%The characterization \eqref{eq:primalSDAcharacterization} makes it clear that given a connected subset $s_k\subset\mathcal{E}$ of edges whose set of nodes we denote $n_k$, $x^{k+1}$ is found by
+%\begin{equation}{\label{eq:BKUpdate}}
+%x^{k+1}_i = 
+%\begin{cases}
+%\frac{\sum_{j\in n_k}x_j^k}{|n_k|} & \text{if } i\in n_k\\
+%x_i^k & \text{if } i\not\in n_k.
+%\end{cases}
+%\end{equation}
+%The update \eqref{eq:BKUpdate} is the same as the randomized gossip algorithm defined above.
+%
+%We wish to consider the pairwise case where $S_k=I_{s_k}$ is generated by a single edge: $s_k=(i,j)$.  Further, we consider greedy updates, where $s_k$ is chosen to maximize the decrease in the objective $\|x-c\|_2^2$.  From our other work, this greedy update corresponds to updating the edge $(i,j)$ such that $(x_i^k-x_j^k)^2$ is maximized over edges $(i,j)$.
+%
+%
+%
+%\subsection{Main Definitions, Propositions, and Approach}
+%
+%Define the following measure of consensus at a node $i$:
+%\begin{definition}{\label{defn:graphDiscordance}}
+%Define the \textit{discordance} at node $i$ in a graph $G$ where each node $j$ is assigned a value $x_j$ by
+%\begin{equation*}
+%d(x|G,i) = \sum_{j=1}^nA_{ij}(x_i-x_j)^2.
+%\end{equation*}
+%If $X_j$ are random variables, we define the \textit{expected discordance} by
+%\begin{equation}{\label{eq:expectedGraphDiscordance}}
+%d(X|G,i) = \sum_{j=1}^nA_{ij}\E[(X_i-X_j)^2]
+%\end{equation}
+%\end{definition}
+%
+%Note that definitions \ref{defn:graphDiscordance} and \ref{defn:graphDiscordance} are related as
+%\begin{equation*}
+%d(x) = \sum_{j=1}^nd(x|G,i) \qquad d(X) = \sum_{j=1}^nd(X|G,i).
+%\end{equation*}
+%Thus, $d(x)$ may be thought of as the total perceived discordance among the nodes of the graph assuming that information is passed only between adjacent nodes.  This is the reason why we say that $d(x)$ is local: it depends only on information passing among adjacent nodes.
+%
+%Define the following ``global'' measure of consensus:
+%
+%
+%It is not clear from the definition \ref{defn:consensusError} that $e(x)$ or $e(X)$ are ``global'' concepts, but the following definition and proposition explain why this is so.
+%
+%
+%
+%The total discordance in \ref{defn:totalDiscordance} is certainly ``global'': it's calculation depends on information for every pair of nodes; not only adjacent pairs of nodes.  This can also be understood by noticing that the total discordance in \ref{defn:totalDiscordance} is equivalent to the discordance in \ref{defn:graphDiscordance} when $G$ is a complete graph.
+%
+%We will generally consider the case that the value at each node is a random variable, so we will generally consider the expected value versions of defintions \ref{defn:graphDiscordance}, \ref{defn:consensusError}, and \ref{defn:totalDiscordance}.
+%
+%The following proposition relates defintions \ref{defn:consensusError} and \ref{defn:totalDiscordance}
+%
+%
+%Proposition \ref{prop:discErrorRelationship} explains why we call the quantity in \ref{defn:consensusError} global.  Indeed, the proposition says that the consensus error in \ref{defn:consensusError} is a constant multiple of the total discordance in \ref{defn:totalDiscordance}, which as explained previously is ``global'' concept.
+%
+%
+%In the following proposition we give a condition on $\alpha(k)$ such that the recurrence relation \eqref{eq:discordanceRecurrence} decays to $0$ in probability.  Later we analyze the convergence more carefully.
+%
+%\begin{example}{\label{ex:convUniformComplete}}
+%Suppose $G$ is the complete graph and suppose $\Pr((p,q)|k+1) = 1/|\mathcal{E}(G)|$, where $\mathcal{E}(G)$ is the set of undirected edges in $G$.  Then
+%\begin{equation*}
+%\tilde{\alpha}(k) = \frac{1}{n-1}
+%\end{equation*}
+%since $\E_{(p,q)}[\E[(X_p(k)-X_q(k))]] = \frac{1}{n(n-1)}\E[d_k(X)]$.  This implies
+%\begin{equation*}
+%\sum_{l=0}^k\tilde{\alpha}(l)=\frac{k}{n-1}.
+%\end{equation*}
+%Therefore,
+%\begin{equation*}
+%\Pr(d_k(X)\geq\epsilon) \leq\epsilon^{-1}e^{-\frac{k}{n-1}}\E[d_0(X)],
+%\end{equation*}
+%and thus, proposition \ref{prop:discErrorRelationship} implies
+%\begin{equation*}
+%\Pr(e_k(X)\geq\epsilon) \leq\epsilon^{-1}e^{-\frac{k}{n-1}}\E[e_0(X)],
+%\end{equation*}
+%where we send $\epsilon\mapsto 2n\epsilon$.  Therefore,
+%\begin{equation*}
+%k> (n-1)\log\left(\frac{\E[d_0(X)]}{\epsilon^2}\right) \implies \Pr(d_k(X)\geq\epsilon)<\epsilon.
+%\end{equation*}
+%In other words,
+%\begin{equation*}
+%T_{\text{ave}}(\epsilon,P) \leq (n-1)\log\left(\frac{\E[d_0(X)]}{\epsilon^2}\right)
+%\end{equation*}
+%or $T_{\text{ave}}(\epsilon,P) = O(n)$ in terms of the size of the graph.  
+%\end{example}
+%
+%\begin{enumerate}
+%\item Based on simulations the result of example \ref{ex:convUniformComplete} is probably general: convergence is at best $O(n)$ in the size of the network.
+%\end{enumerate}
+%
+%Comments:
+%\begin{enumerate}
+%\item The key to understanding $\tilde{\alpha}(k)$ is understanding how a choice of $\E[(X_p-X_q)^2]$ at one time-step affects one's choices of $\E[(X_p-X_q)^2]$ at the next time-step.  In order to do this, I think I need to consider a certain random walk that has a probably $1/2$ of staying at a node and a probability $1/2$ of moving to a neighboring node.  Working this out now.
+%\end{enumerate}
+%
+%% In general, at event time $k+1$, there is a probability $\Pr((p,q)|k+1)$ of $p$ and $q$ being updated.
+%
+%
+%%  Thus, taking the expectation of \eqref{eq:discordancyIncrement},
+%% \begin{equation}
+%% d_{k+1}(G)-d_k(G) = -n\cdot\sum_{p,q=1}^n\Pr((p,q)|k+1)\E[(X_p(k)-X_q(k))^2].
+%% \end{equation}
+%% The problem of increasing the convergence rate is now seen to be a problem of optimizing the probabilities $\Pr((p,q)|k)$.  It's clear that
+%% \begin{equation}
+%% d_{k+1}(G)-d_k(G) = -n\cdot\frac{\sum_{p,q=1}^n\Pr((p,q)|k+1)\E[(X_p(k)-X_q(k))^2]}{d_{k}(G)}d_k(G) = -n\alpha(k)d_k(G),
+%% \end{equation}
+%% where we let
+%% \begin{equation}
+%% \alpha(k) = \frac{\sum_{p,q=1}^n\Pr((p,q)|k+1)\E[(X_p(k)-X_q(k))^2]}{d_{k}(G)}.
+%% \end{equation}
+%% \subsection{Total Discordance and the Error}
+%
+%% Denote the average of the initial values by
+%% \begin{equation}
+%% \bar{X} = \frac{1}{n}\sum_{i=1}^nX_i(0)
+%% \end{equation}
+%% and the expectation of the average of the initial values by
+%% \begin{equation}
+%% \bar{x} = \E[\bar{X}] = \sum_{i=1}^n\E[X_i(0)].
+%% \end{equation}
+%% Further, denote the \textit{error} by
+%% \begin{equation}
+%% e_k = \sum_{i=1}^n\E[(X_i(k)-\bar{X})^2].
+%% \end{equation}
+%% Therefore, the discordance and error are related as
+%% \begin{equation}
+%% d_k(G) = 2ne_k(G).
+%% \end{equation}
+%% Thus, if $d_k(G)\to0$, $e_k(G)\to 0$, so $X_i(k)\to\bar{X}$ in $L^2$ for all $i=1,\ldots,n$.  Further, if $d_k(G)=\Omega(f(n))$ then $e_k(G) = \Omega(\frac{1}{n}f(n))$.
+%% and in particular, as $d_k(G)\to0$,
+%% \begin{equation}
+%% e_k(G) \to \frac{1}{n}\sum_{i=1}^n\Var(X_i^0).
+%% \end{equation}
+%
+%% Denote $\bar{X} = \frac{1}{n}\sum_{i=1}^nX_i(0)$.  Then,
+%% \begin{align}
+%% e_k &= \sum_{i=1}^n\E[(X_i(k)-x_{\text{ave}})^2]\\
+%% &= \sum_{i=1}^n\left(\E[(X_i(k)-\bar{X})^2] - 2\E[(X_i(k)-\bar{X})(\bar{X}-x_{\text{ave}})] + \E[(\bar{X}-x_{\text{ave}})^2]\right)\\
+%% &= \hat{e}_k + \frac{1}{n}\sum_{i=1}^n\Var(X_i(0)).
+%% \end{align}
+%
+%\section{Numerics}
+%
+%We simulate our algorithm using a stochastic block model (SBM) with two planted communities.  In figures \ref{fig:SBM1} and \ref{fig:SBM2}, we give give visualizations of a sample from the two stochastic block models we use in our simulations.  We will consider $n=1000$ nodes with $2$ planted communities.  The probability of a node being in community $1$ is given by $0.5$ and the probability of a node being in community $2$ is given by $0.5$.  We will take the intra-community edge probability to be $0.01$ and the inter-community edge probability to be one of $.001$ in the less clustered case and $.00001$ in the more clustered case. 
+%
+%%\begin{figure}
+%%\centering
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/sampleSBM.eps}
+%%		\caption{Sample SBM with $1000$ nodes, $2$ planted communities, even probabilities of being in each community, $.01$ intra-community edge probability, and $.0001$ inter-community edge probability}
+%%		\label{fig:SBM1}
+%%	\end{subfigure}
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/sampleSBMLessClustering.eps}
+%%		\caption{Sample SBM with $1000$ nodes, $2$ planted communities, even probabilities of being in each community, $.01$ intra-community edge probability, and $.001$ inter-community edge probability}
+%%		\label{fig:SBM2}
+%%	\end{subfigure}
+%%\end{figure}
+%
+%For the first simulation, we consider structured data.  Here, we enumerate the nodes so that all nodes in cluster $1$ precede all nodes in cluster $2$.  Then, we let
+%\begin{equation*}
+%x_i(0) = 10*i.
+%\end{equation*}
+%Thus, the values of $x_i(0)$ of nodes $i$ in cluster $1$ are much smaller the the values $x_j(0)$ of nodes $j$ in cluster $2$.  We consider convergence of the algorithms described above in figures \ref{fig:ConvergenceStructuredClustered} and \ref{fig:ConvergenceStructuredLessClustered}.  We see that the non-homogeneous uniform algorithm performs the best, and the performance is \textit{much} better in the case of structured data, as seen in \ref{fig:ConvergenceStructuredClustered}.  There is little difference between the algorithms, even though the data is structured, in the case of the less clustered SBM as seen in figure \ref{fig:ConvergenceStructuredLessClustered}.
+%
+%%\begin{figure}
+%%\centering
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/1stEffortConvergence.eps}
+%%		\caption{Convergence of our algorithms with structured data on a clustered sample SBM with parameters in \ref{fig:SBM1}.}
+%%		\label{fig:ConvergenceStructuredClustered}
+%%	\end{subfigure}
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/1stEffortConvergenceLessClustering.eps}
+%%		\caption{Convergence of our algorithms with structured data on an less clustered sample SBM with parameters in \ref{fig:SBM2}.}
+%%		\label{fig:ConvergenceStructuredLessClustered}
+%%	\end{subfigure}
+%%\end{figure}
+%
+%We consider convergence of the algorithms in the case of unstructured data.  We take $x_i(0)$ to be uniformly distributed between $0$ and $1$ for all $i$.  In this case, there is little difference between the algorithms on either the more or less clustered SBMs, as seen in figures \ref{fig:ConvergenceUnstructuredClustered} and \ref{fig:ConvergenceUnstructuredLessClustered}.
+%
+%%\begin{figure}
+%%\centering
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/1stEffortConvergenceUnif.eps}
+%%		\caption{Convergence of our algorithms with unstructured data on a clustered sample SBM with parameters in \ref{fig:SBM1}.}
+%%		\label{fig:ConvergenceUnstructuredClustered}
+%%	\end{subfigure}
+%%	\begin{subfigure}[b]{.48\textwidth}
+%%		\includegraphics[width=\textwidth]{images/1stEffortConvergenceLessClusteringUnif.eps}
+%%		\caption{Convergence of our algorithms with unstructured data on an less clustered sample SBM with parameters in \ref{fig:SBM2}.}
+%%		\label{fig:ConvergenceUnstructuredLessClustered}
+%%	\end{subfigure}
+%%\end{figure}
+%
+%An interesting observation from fig. \ref{fig:ConvergenceUnstructuredClustered} is that the algorithm levels out at a non-zero relative error.  This shows that structured data is crucial for the performance of the algorithms with with rates \eqref{eq:NonhomogeneousRateModel}: by prioritizing neighbors with different estimates, the algorithm ended up having nodes prioritize neighbors in different clusters.
+%
+%A better algorithm would have nodes directly prioritize information from neighbors in different clusters; however, this information is inherently global and cannot be obtained without great expense from local updates.  Indeed, the authors of the recent article \cite{mallman2018eigenvector} developed a message passing scheme for estimation of eigenvectors of a graph and discussed the usage of their method for community detection.  A distributed averaging scheme combining a message-passing community detection algorithm and an averaging scheme may have very good performance regardless of the structure of the data.
+% 
+%\section{Current Questions}
+%
+%\begin{enumerate}
+%\item Analysis for stochastic block model.
+%\item Why does greedy gossip take so long?
+%\item Is there a way to incorporate actual clustering information?  See paper \cite{mallman2018eigenvector}
+%\item Why exactly does the relative error level off in the unstructured, clustered data case?
+%\end{enumerate}
+
+\bibliographystyle{abbrv}
+\bibliography{murimainrefs}
+
+\end{document}

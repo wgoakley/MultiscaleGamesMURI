@@ -1,0 +1,764 @@
+\documentclass{article}
+	% General document formatting
+	\usepackage[margin=0.7in]{geometry}
+	\usepackage[parfill]{parskip}
+	\usepackage[utf8]{inputenc}
+	
+	% Related to math
+	\usepackage{amsmath,amssymb,amsfonts,amsthm}
+	\usepackage{enumerate}
+
+	\newtheorem{theorem}{Theorem}
+	\newtheorem{proposition}{Proposition}
+	\theoremstyle{remark}
+	\newtheorem{definition}{Definition}
+	\newtheorem{lemma}{Lemma}
+	\newtheorem{question}{Question}
+	\newtheorem{corollary}{Corollary}
+	\newtheorem{remark}{Remark}
+	\newtheorem{example}{Example}
+	
+	\newcommand{\R}[0]{\mathbb{R}}
+	\DeclareMathOperator{\Span}{span}
+	\DeclareMathOperator{\sgn}{sgn}
+	\DeclareMathOperator*{\argmax}{argmax}
+	
+	\title{MURI Discordance Games Notes}
+	\author{MURI LA}
+	
+	\allowdisplaybreaks
+	
+	\begin{document}
+	\maketitle
+	\section{Definitions}
+
+\begin{definition}{\label{defn:discordanceOfNode}}
+Let $G$ be an undirected graph with adjacency matrix $A$ and let $x\in\R$ be a vector indexed by the nodes $i\in\mathcal{V}(G)$. Denote and define the \textit{discordance} of a node $i\in\mathcal{V}(G)$ as the following function of $x$:
+	\begin{equation*}
+	d_i(x|G) = \sum_{k=1}^nA_{ik}(x_i-x_k)^2.
+	\end{equation*}
+\end{definition}
+Naturally, we may also define the discordance of a subset $V\subset\mathcal{V}(G)$ of nodes as follows
+\begin{definition}{\label{defn:discordanceOfSet}}
+Denote and define the discordance of a subset $S\subset\mathcal{V}(G)$ of nodes as follows:
+	\begin{equation*}
+	d_S(x|G) = \sum_{i\in S}d_i(x|G).
+	\end{equation*}
+\end{definition}
+If we interpret $x$ as a vector of \textit{opinions} about a topic, then $d_i(x|G)$ is one way to measure how much node $i$ disagrees with its neighbors in the graph $G$. Under the interpretation of $x$ as a vector of opinions, it is of interest to define a model for how the values $x_i$ change as nodes in $G$ communicate. Accordingly, we make the following definition: 
+
+\begin{definition}{\label{defn:alphaEqualAgreement}}
+Consider two nodes $p,q\in\mathcal{V}(G)$ with values $x_p,x_q\in\R$. We say that the nodes $p$ and $q$ come to an $\alpha$-\textit{equal agreement} if the nodes $p$ and $q$ change their values as follows:
+	\begin{equation*}
+	x_p\mapsto x_p+\sgn(x_q-x_p)\alpha\qquad\qquad x_q\mapsto x_q+\sgn(x_p-x_q)\alpha, 
+	\end{equation*}
+where
+	\begin{equation*}
+	0<\alpha\leq\frac{|x_p-x_q|}{2}.
+	\end{equation*}
+and $\sgn(x)=x/|x|$ for $x\neq 0$.
+\end{definition}
+
+We wish to investigate when agreements between two nodes $p,q\in\mathcal{V}(G)$ can occur under the following assumption:
+
+\begin{definition}{\label{defn:discordanceDecreasingUpdate}}
+	Let $S\subset\mathcal{V}(G)$ be a subset of nodes of the graph $G$ and let $x\in\R^n$ be a vector of values assigned to the nodes in $\mathcal{V}(G)$. Consider an update $x\mapsto x'\in\R^n$ to the values $x$ such that $x_i' = x_i$ for $i\not\in S$. We say that the update is \textit{discordance decreasing} if 
+	\begin{equation*}
+	d_S(x')-d_S(x) < 0
+	\end{equation*}
+\end{definition}
+
+\section{Notes from May 6 Meeting}
+
+\begin{question}{\label{question:updatePairExistence}}
+For every choice of $x\in\R^n$ and for every graph $G$ does there exist a pair of adjacent nodes $p,q\in\mathcal{V}(G)$ and an $\alpha>0$ sufficiently small such that an discordance decreasing $\alpha$-equal agreement can occur between $p$ and $q$.  
+\end{question}
+
+To address the question above, we state the following lemma.
+\begin{lemma}{\label{lemma:ddInequality}}
+	Let $p,q\in\mathcal{V}(G)$ be two adjacent nodes in a graph $G$. Let $x\in\R^n$ be a vector of values corresponding to the nodes of $G$. Assume without loss of generality that $x_p>x_q$. Then there exists an $\alpha>0$ sufficiently small such that a discordance decreasing update can occur between nodes $p$ and $q$ if the following inequality holds:
+	\begin{equation}{\label{lemma:ddInequality:eq:inequality}}
+		\sgn(x_p-x_q)\sum_{\substack{k=1\\k\neq q}}^nA_{ik}(x_k-x_p) + \sgn(x_p-x_q)\sum_{\substack{k=1\\k\neq p}}^nA_{jk}(x_k-x_q) < 4|x_p-x_q|
+	\end{equation}
+\end{lemma}
+\begin{proof}
+	Without loss of generality, assume $x_p>x_q$ so that the $\alpha$-equal agreement between nodes $p$ and $q$ becomes
+	\begin{equation}{\label{lemma:ddInequality:eq:agreement}}
+		x_p\mapsto x_p -\alpha \qquad\qquad x_q\mapsto x_q+\alpha.	
+	\end{equation}
+	Denote $x'$ the new vector of values after the agreement \eqref{lemma:ddInequality:eq:agreement}, denote $d_{ij}(x) = d_{\{i,j\}}(x)$, and denote $k_i$ the degree of node $i$. The change in discordance for the set $\{i,j\}$ is given by
+	\begin{equation}{\label{lemma:ddInequality:eq:Derivation}}
+		\begin{aligned}
+			d_{pq}(x')-d_{pq}(x) &= \sum_{\substack{k=1\\k\neq q}}^nA_{pk}((x_p-x_k-\alpha)^2-(x_p-x_k)^2) \\
+			&\qquad+\sum_{\substack{k=1\\k\neq p}}^nA_{qk}((x_q-x_k+\alpha)^2-(x_q-x_k)^2) + 2(x_p-x_q-2\alpha)^2 - 2(x_p-x_q)^2\\
+			&= -2\alpha\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_p-x_k) + (k_p-1)\alpha^2 + 2\alpha\sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) + (k_q-1)\alpha^2 - 8\alpha(x_p-x_q) + 8\alpha^2\\
+			&= 2\alpha\left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) - 4(x_p-x_q)\right) + \left(k_p+k_q+6\right)\alpha^2. 
+		\end{aligned}
+	\end{equation}
+	Thus, if inequality \eqref{lemma:ddInequality:eq:inequality} holds then \eqref{lemma:ddInequality:eq:Derivation} implies that for $\alpha$ sufficiently small, $d_{pq}(x')-d_{pq}(x) < 0$.
+\end{proof}
+[[Determine the $\alpha$ in lemma \ref{lemma:ddInequality} to determine how large of an agreement is possible.  When is a consensus to the middle ground possible?]]
+
+The following proposition answers question \ref{question:updatePairExistence} in the affirmative. The idea of the proof is to build a path (walk of distinct nodes) such that the node values along the path are strictly increasing. If inequality \eqref{lemma:ddInequality:eq:inequality} fails for all pairs of adjacent nodes in the graph, then the process by which the path is constructed does not terminate. Since there are a finite number of nodes in the graph, this leads to a contradiction.   
+\begin{proposition}{\label{prop:updatePairExistence}}
+	For any graph $G$ and any vector $x\in\R^n$ of values indexed by the nodes of $G$, there exists a pair of adjacent nodes $p,q\in\mathcal{V}(G)$ and an $\alpha>0$ sufficiently small such that a discordance decreasing $\alpha$-equal agreement is possible between nodes $p$ and $q$.
+\end{proposition}
+\begin{proof}
+	Let $i_0$ be the index of a node such that $x_{i_0}\leq x_{k}$ for all neighbors $k$ of $i_0$ (such as the minimal value in $x$) and $x_{i_0} < x_{i_1}$ for some neighbor $i_1$. We will call a node $i$ satisfying $x_{i}\leq x_{k}$ for all neighbors $k$ of $i$ \textit{locally minimal} and a node satisfying the same condition with $\geq$ locally maximal. Inequality \eqref{lemma:ddInequality:eq:inequality} with $i_0$ and $i_1$ reads
+	\begin{equation}{\label{lemma:ddInequality:eq:1}}
+		\sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_k-x_{i_1}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_{i_0}-x_k) < 4(x_{i_1}-x_{i_0})
+	\end{equation}
+	If equation \eqref{lemma:ddInequality:eq:1} holds, we can update nodes $i_0$ and $i_1$. If not, then \eqref{lemma:ddInequality:eq:1} being false and $x_{i_0}$ being minimal among its neighbors implies that 
+	\begin{equation}{\label{lemma:ddInequality:eq:2}}
+		\sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_k-x_{i_1}) \geq 4(x_{i_1}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_k-x_{i_0})>0.
+	\end{equation}
+	Equation \eqref{lemma:ddInequality:eq:2} implies that there exists a neighbor $i_2$ of $i_1$ such that $x_{i_2}>x_{i_1}$. Consider inequality \eqref{lemma:ddInequality:eq:inequality} for nodes $i_1$ and $i_2$:
+	\begin{equation}{\label{lemma:ddInequality:eq:3}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) + \sum_{\substack{k=1\\k\neq i_2}}^nA_{i_1k}(x_{i_1}-x_k) < 4(x_{i_2}-x_{i_1})
+	\end{equation}
+	If inequality \eqref{lemma:ddInequality:eq:3} holds, then we're done.  Otherwise, we write the negation of \eqref{lemma:ddInequality:eq:3} as follows:
+	\begin{equation}{\label{lemma:ddInequality:eq:4}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_{i_1}-x_k) + (x_{i_1}-x_{i_0}) \geq 3(x_{i_2}-x_{i_1})
+	\end{equation}
+	Reorganizing \eqref{lemma:ddInequality:eq:4} we obtain
+	\begin{equation}{\label{lemma:ddInequality:eq:5}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) \geq 3(x_{i_2}-x_{i_1}) - \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(x_{i_1}-x_k)- (x_{i_1}-x_{i_0})
+	\end{equation}
+	and by using inequality \eqref{lemma:ddInequality:eq:2} in \eqref{lemma:ddInequality:eq:5} we obtain
+	\begin{equation}{\label{lemma:ddInequality:eq:6}}
+		\sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(x_k-x_{i_2}) \geq 3(x_{i_2}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_{k}-x_{i_0})>0.
+	\end{equation}
+	Inequality \eqref{lemma:ddInequality:eq:6} shows that $i_2$ has a neighbor $i_3$ such that $x_{i_3}>x_{i_2}$. Continue in this fashion. Suppose that the inequality \eqref{lemma:ddInequality:eq:inequality} does not hold for consecutive values in the sequence $i_0,i_1,\ldots,i_m$ of consecutively adjacent vertices and such that $x_{i_0}<x_{i_{1}}<\ldots<x_{i_m}$. Suppose inequality \eqref{lemma:ddInequality:eq:1} fails when applied to nodes $i_m$ and $i_{m-1}$. Then,
+	\begin{multline}{\label{lemma:ddInequality:eq:7}}
+		\sum_{\substack{k=1\\k\neq i_{m-1}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 4(x_{i_m}-x_{i_{m-1}}) + \sum_{\substack{k=1\\k\neq i_{m}}}^n A_{i_{m-1}k}(x_k-x_{i_{m-1}}) \\= 3(x_{i_m}-x_{i_{m-1}}) + \sum_{\substack{k=1\\k\neq i_{m-2}}}^nA_{i_{m-1}k}(x_k-x_{i_{m-1}}) + (x_{i_{m-2}}-x_{i_{m-1}})
+	\end{multline}
+	By the induction hypothesis, we have that a similar inequality holds for $i_{m-1}$ and $i_{m-2}$:
+	\begin{multline}{\label{lemma:ddInequality:eq:8}}
+		\sum_{\substack{k=1\\k\neq i_{m-2}}}^nA_{i_{m-1}k}(x_k-x_{i_{m-1}}) \geq 4(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-1}}}^n A_{i_{m-2}k}(x_k-x_{i_{m-2}}) \\= 3(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-3}}}^nA_{i_{m-2}k}(x_k-x_{i_{m-2}}) + (x_{i_{m-3}}-x_{i_{m-2}})
+	\end{multline}
+	Plugging in inequality \eqref{lemma:ddInequality:eq:8} into \eqref{lemma:ddInequality:eq:7} we obtain
+	\begin{equation}
+		\sum_{\substack{k=1\\k\neq i_{m-1}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 3(x_{i_m}-x_{i_{m-1}}) + 2(x_{i_{m-1}}-x_{i_{m-2}}) + \sum_{\substack{k=1\\k\neq i_{m-3}}}^nA_{i_{m-2}k}(x_k-x_{i_{m-2}}) + (x_{i_{m-3}}-x_{i_{m-2}}).
+	\end{equation}
+	Continuing in this fashion, we obtain the following
+	\begin{equation}{\label{lemma:ddInequality:eq:7}}
+		\sum_{\substack{k=1\\k\neq i_{m}}}^nA_{i_mk}(x_k-x_{i_m}) \geq 3(x_{i_m}-x_{i_{m-1}}) + 2(x_{i_{m-1}}-x_{i_1}) + 3(x_{i_1}-x_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(x_k-x_{i_0}) > 0.
+	\end{equation}
+	Which shows that $i_m$ has a neighbor $i_{m+1}$ satisfying $x_{i_{m+1}}>x_{i_m}$.
+
+	Since the graph $G$ is finite, the process to obtain the distinct vertices $i_0,i_1,\ldots,i_m$ must terminate. [[one can strengthen the statement of the proposition]]
+\end{proof}
+
+\section{Notes following May 10 Meeting}
+
+\subsection{Previous Results and Definitions}
+
+We consider the following three aggregate quantities over the graph $G$ for measuring the total difference in opinion between the individuals in the graph:
+\begin{definition}{\label{defn:discordance}}
+	Denote and define the \textit{discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	d(X,t|G) = \sum_{i,j=1}^nA_{ij}(X_i(t)-X_j(t))^2 = \|MX(t)\|_2^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:totalDiscordance}}
+	Denote and define the \textit{total discordance} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by
+\begin{equation*}
+	d(X,t)= \sum_{i,j=1}^n(X_i(t)-X_j(t))^2.
+\end{equation*}
+\end{definition}
+
+\begin{definition}{\label{defn:consensusError}}
+	Denote and define the \textit{consensus error} of the nodes $i\in\mathcal{V}(G)$ with values $X_i(t)$ by 
+\begin{equation*}
+	e(X,t) = \|X(t)-X_{\text{ave}}\mathbf{1}\|^2_2.
+\end{equation*}
+\end{definition}
+
+For all three definitions \ref{defn:discordance}-\ref{defn:consensusError} we will omit the $t$ argument when we are interested in a fixed $X$.  Additionally, when concerned with a sequence $t_0<t_1<\cdots$ of times, we will specify just the index rather than the time: $e(X,k) = e(X,t_k)$ for example.
+
+\begin{proposition}{\label{prop:discErrorRelationship}}
+	The total discordance in definition \ref{defn:totalDiscordance} is related to the consensus error \ref{defn:consensusError} by 
+\begin{equation*}
+d(X,t) = 2ne(X,t).
+\end{equation*}
+\end{proposition}
+\begin{proof}
+We omit the time $t$ in the following calculation for brevity:
+\begin{align}
+d(X) &= \sum_{i,j=1}^n(X_i-X_j)^2 \nonumber\\
+&= \sum_{i,j=1}^n(X_i-X_{\text{ave}})^2 + \sum_{i,j=1}^n(X_j-X_{\text{ave}})^2 - 2\sum_{i,j=1}^n(X_i-X_{\text{ave}})(X_j-X_{\text{ave}}) \label{prop:eq:der1}\\
+&= 2ne(X) -  2(nX_{\text{ave}}-nX_{\text{ave}})(nX_{\text{ave}}-nX_{\text{ave}})\label{prop:eq:der2}\\
+&= 2ne(X).
+\end{align}
+where in \eqref{prop:eq:der1} use $X_i-X_j = X_i - X_{\text{ave}} + X_{\text{ave}} - X_j$ and in \eqref{prop:eq:der2} we pass the sums inside $(X_i-X_{\text{ave}})(X_j-X_{\text{ave}})$.
+\end{proof}
+
+\subsection{Convergence of the $\alpha$-equal Agreement Update}
+
+\subsubsection{Notation and Setup}
+
+We consider updates of the following form:
+\begin{equation}{\label{eq:generalUpdateRule2}}
+\begin{aligned}
+	X_p(k+1) &= X_p(k) - \beta_k\sgn(X_p(k)-X_q(k))(X_p(k)-X_q(k))\\
+	X_q(k+1) &= X_q(k) + \beta_k\sgn(X_p(k)-X_q(k))(X_p(k)-X_q(k)).
+\end{aligned}
+\end{equation}
+This is the same update as the previous section except we now explicitly consider $\beta_k\in(0,1/2]$ to be a coefficient giving the fraction of the gap the nodes $p$ and $q$ change their opinion upon an $\beta$-equal agreement. We make note of the following proposition giving the amount by which the error changes upon an $\beta_k$-equal agreement.
+
+Consider equation \eqref{lemma:ddInequality:eq:Derivation}.  Substituting $\alpha\mapsto\beta(x_p-x_q)$, we find that for an update at edge $(p,q)$ to be viable,
+\begin{equation}{\label{eq:betaAlphaCondition}}
+	2\left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) - 4(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0,
+\end{equation}
+%\begin{equation}{\label{eq:betaAlphaCondition2}}
+	%2\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0.
+%\end{equation}
+We rewrite \eqref{eq:betaAlphaCondition} as
+\begin{equation}
+	\beta(X_p-X_q) < \frac{4(X_p-X_q) - \left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(X_k-X_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(X_q-X_k)\right)}{(k_p+k_q+6)/2} 
+\end{equation}
+
+Define $\beta(p,q)$ as follows
+\begin{equation}{\label{eq:greedyUpdateRule}}
+	\beta(p,q)= \max_{0<\beta\leq 1/2}\left\{\beta(X_p-X_q) < \frac{4(X_p-X_q) - \left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(X_k-X_p) + \sum_{\substack{k=1\\k\neq p}}^n(X_q-X_k)\right)}{(k_p+k_q+6)/2}\right\}. 
+\end{equation}
+or $\beta(p,q) = 0$ if the equation \eqref{eq:greedyUpdateRule} does not yield a value for $\beta(p,q)$.  Additionally, define $p^*,q^*\in\mathcal{V}(G)$ as an adjacent pair of nodes satisfying
+\begin{equation}{\label{eq:greedyUpdateRule2}}
+	(p^*,q^*) \in \argmax_{\substack{(p,q)\in\mathcal{E}(G)\\X_p>X_q}}\beta(p,q)(X_p-X_q).
+\end{equation}
+
+We first prove a lemma which relates the graph discordance to the error:
+\begin{lemma}{\label{lemma:errorGraphDiscordanceRelationship}}
+	Denote $L$ the graph Laplacian of the graph $G$ and denote $\lambda_k(L)$ the $k^{th}$ smallest eigenvalue of $L$.  If $G$ is connected, then $\lambda_n(L),\lambda_2(L)>0$ and 
+	\begin{equation*}
+		\lambda_{2}(L)e(X) \leq d(X|G) \leq \lambda_{n}(L)e(X).
+	\end{equation*}
+\end{lemma}
+\begin{proof}
+	Clearly,
+	\begin{equation}{\label{lemma:errorGraphDiscordanceRelationship:eq:1}}
+		\left(\inf_{X\in\R^n}\frac{d(X|G)}{e(X)}\right)e(X) \leq  d(X|G) \leq \left(\sup_{X\in\R^n}\frac{d(X|G)}{e(X)}\right)e(X) 
+	\end{equation}
+	Denote $1_n\in\R^n$ the vector of all ones. Notice that the coefficient
+	\begin{equation*}
+		\frac{d(X|G)}{e(X)}	
+	\end{equation*}
+	is unchanged by the transformation $X\mapsto X + c1_n$ for a constant $c$. Accordingly, if we denote $v_1,\ldots,v_{n}$ the eigenvectors of $L$ corresponding to eigenvalues $0=\lambda_1<\lambda_2\leq\ldots\leq\lambda_n$, we can write
+	\begin{equation}{\label{lemma:errorGraphDiscordanceRelationship:eq:2}}
+	\begin{aligned}
+		\inf_{X\in\R^n}\frac{d(X|G)}{e(X)} &= \inf_{X\perp 1_n}\frac{X^TLX}{X^TX} = \lambda_2(L)\\
+		\sup_{X\in\R^n}\frac{d(X|G)}{e(X)} &= \frac{v_n^TLv_n}{v_n^Tv_n} = \lambda_n(L).
+	\end{aligned}
+	\end{equation}
+	If $G$ is connected, it is known that $\lambda_2(L)>0$. The lemma follows from \eqref{lemma:errorGraphDiscordanceRelationship:eq:1} and \eqref{lemma:errorGraphDiscordanceRelationship:eq:2}.
+\end{proof}
+The folllowing proposition relates the ``updateability'' of the nodes on the graph to the distance of the nodes from consensus. Note: it is not important here to use $\beta(p^*,q^*)(X_{p^*}-X_{q^*})$ in the statement of the proposition. The proposition should be restated to work for any ``norm'' of the update size. This is important as it will allow us to establish convergence for random choice of updateable node (the expected value of the update size generates a norm, and the usual application of Markov's inequality will prove convergence in probability). 
+\begin{proposition}{\label{proposition:errorUpdateEquivalence}}
+        There exist constants $c_*(G),c^*(G)\in\R_{>0}$, independent of $X$, such that
+        \begin{equation}
+		c_*(G)e(X)^{1/2} \leq \beta(p^*,q^*)|X_{p^*}-X_{q^*}| \leq c^*(G)e(X)^{1/2},
+        \end{equation}
+where $c_*(G)\leq1/2$ and  $c^*(G) = \sqrt{n/2}$.
+	%todo: figure out value of $c_*(G)$
+\end{proposition}
+\begin{proof}
+        \begin{enumerate}
+                \item Upper Bound. We know that $\beta\leq1/2$ and $(X_p-X_q)^2 \leq d(X|G)$, so
+                        \begin{equation}{\label{eq:updateSizeBound1}}
+                                (\beta^*(X_{p^*}-X_{q^*}))^2\leq \frac{1}{4}d(X|G)
+                        \end{equation}
+                        Thus by proposition \ref{prop:discErrorRelationship},
+                        \begin{equation}{\label{eq:updateSizeBound2}}
+                                (\beta^*(X_{p^*}-X_{q^*}))^2 \leq \frac{n}{2}e(X).
+                        \end{equation}
+                        This bound is tightest bound independent of $X$, as can be seen by letting the values associated with two adjacent nodes $i$ and $j$ be distinct and letting every other node $k$ have value $(x_i+x_j)/2$. This works for any connected graph of $n\geq2$ nodes.
+		\item Lower Bound. First, note that $c^*(G)\leq1/2$, which is attained in a connected graph of $2$ nodes.
+			
+			We prove the existence of a lower bound by contradiction. Later work will address determining the tightest bound. Let $\epsilon_0>0$ be fixed and suppose for all $\epsilon>0$ there exists an $X\in\R^n$ such that $e(X)\geq\epsilon_0^2>0$ and $\beta^*|X_{p^*}-X_{q^*}|<\epsilon$. By lemma \ref{lemma:errorGraphDiscordanceRelationship}, $e(X)\geq\epsilon_0^2$ implies that for some adjacent pair of nodes $i_1,i_0\in\mathcal{V}(G)$, where we let $X_{i_1}>X_{i_0}$,
+			\begin{equation}{\label{eq:lowerboundOnDiff}}
+				(X_{i_1}-X_{i_0})^2 \geq \frac{d(X|G)}{2m}\geq\frac{\lambda_2(L)}{2m}\epsilon_0^2.
+			\end{equation}
+			In this proof we will use the assumption that $\beta|X_p-X_q|<\epsilon$ to generate an edge-disjoint path, monotonic with regard to the node values, that passes through the edge $(i_0,i_1)$. Each edge difference, $|X_p-X_q|$, along this path will be of order $\epsilon_0$ rather than of order $\epsilon$. Intuitively, this is is possible since if a node $j$ is only able to update by an amount $\epsilon$ with a node $i$, where we assume $X_j<X_i$, then there must be a neighbor $k$ of $j$ whose value satisfies $X_k<X_j$ (or a neighbor $k$ of $i$ satisfying $X_k>X_i$) and such that $X_j-X_k$ is large enough, in particular of order $\epsilon_0$. Indeed, the function $f(x)=x^2$ is small near zero but grows quickly for $x$ large, so if $X_j\approx X_k$, then node $j$ will not be affected by moving its opinion away from node $k$; however, if $X_k\ll X_j$ then the opinion of node $X_j$ may only be able to move slightly away from $X_k$. The edge-disjoint path generated in this manner, being monotonic in the node values, will stretch from a locally minimal node to a locally maximal node in the graph. However, at this point it is impossible to find a neighbor of the locally maximal node that is larger or a neighbor of the locally minimal node that is smaller. This will be the contradiction.
+			We use big Oh notation below to make the proof easier to read.  In this notation, we have that $\epsilon = O(\epsilon_0)$ and $\epsilon_0 = \Omega(\epsilon)$. From the definition \ref{eq:greedyUpdateRule} of $\beta(p,q)$ and from the assumption that $(X_{i_1}-X_{i_0})^2\geq \frac{\lambda_{2}(L)}{2m}\epsilon_0^2$, we have
+			\begin{equation}{\label{eq:approxInequality}}
+				\Theta(\epsilon_0) = 4(X_{i_1}-X_{i_0}) - \frac{k_{i_0}+k_{i_1}+6}{2}\epsilon < \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(X_{i_0}-X_k) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(X_k-X_{i_1}).
+			\end{equation}
+			\eqref{eq:approxInequality} implies that there must exist some neighbor $i_2\in\mathcal{V}(G)$ of $i_1$ or some neighbor $i_{-1}\in\mathcal{V}(G)$ of $i_0$ such that $X_{i_{2}}>X_{i_1}$ or $X_{i_{-1}}<X_0$, respectively, with 
+			\begin{equation}{\label{eq:approxInequality0}}
+				X_{i_2}-X_{i_1} \geq \frac{4(X_{i_1}-X_{i_0})}{k_{i_0}+k_{i_1}-2}-\frac{k_{i_0}+k_{i_1}+6}{2(k_{i_0}+k_{i_1}-2)}\epsilon \geq \frac{4}{k_{i_0}+k_{i_1}-2}\sqrt{\frac{\lambda_2(L)\epsilon_0^2}{2m}} - \frac{k_{i_0}+k_{i_1}+6}{2(k_{i_0}+k_{i_1}-2)}\epsilon = \Theta(\epsilon_0)
+			\end{equation}
+			or with the same inequality holding for $X_{i_0}-X_{i_{-1}}$. Thus, there are $3$ cases: 1.) there exists a neighbor $i_2$ of $i_1$ such that $X_{i_2}>X_{i_1}$ and $X_{i_2}-X_{i_1}=\Theta(\epsilon_0)$, 2.) there exists a neighbor $i_{-1}$ of $i_0$ such that $X_{i_0}>X_{i_{-1}}$ and $X_{i_{0}}-X_{i_{-1}} = \Theta(\epsilon_0)$, or 3.) both 1.) and 2.) hold.  
+			\begin{enumerate}[1.]
+				\item If we obtained $i_2$ in the previous step, we apply the definition \ref{eq:greedyUpdateRule} of $\beta(p,q)$ to $i_2$ and $i_1$ to obtain the following inequality
+			\begin{equation}{\label{eq:approxInequality1}}
+				4(X_{i_2}-X_{i_1}) - \sum_{\substack{k=1\\k\neq i_2}}^nA_{i_1k}(X_{i_1}-X_k) - \frac{k_{i_1}+k_{i_2}+6}{2}\epsilon < \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(X_k-X_{i_2}), 
+			\end{equation}
+			which we rearrange to write as
+			\begin{equation}{\label{eq:approxInequality2}}
+				3(X_{i_2}-X_{i_1}) - (X_{i_1}-X_{i_0}) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(X_k - X_{i_1}) - \frac{k_{i_1}+k_{i_2}+6}{2}\epsilon < \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(X_k-X_{i_2}). 
+			\end{equation}
+			Now \eqref{eq:approxInequality} can be rewritten as
+			\begin{equation}{\label{eq:approxInequality3}}
+			-4(X_{i_1}-X_{i_0}) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(X_k-X_{i_1}) > -\frac{k_{i_0}+k_{i_1}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(X_{i_0}-X_k) 
+			\end{equation}
+			and applied to \eqref{eq:approxInequality2},
+			\begin{multline}{\label{eq:approxInequality4}}
+					\Theta(\epsilon_0) = 3(X_{i_2}-X_{i_1}) + 3(X_{i_1}-X_{i_0}) - \frac{k_{i_0}+k_{i_1}+6}{2}\epsilon - \frac{k_{i_1}+k_{i_2}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(X_{i_0}-X_k) \\< \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(X_k-X_{i_2}) 
+			\end{multline}
+				\item If we had obtained a node $i_{-1}$ as a result of \eqref{eq:approxInequality}, then the definition \ref{eq:greedyUpdateRule} of $\beta(p,q)$ implies
+			\begin{equation}{\label{eq:approxInequality5}}
+				4(X_{i_{0}}-X_{i_{-1}}) - \sum_{\substack{k=1\\i\neq i_{-1}}}^nA_{i_{0}k}(X_{k}-X_{i_{0}}) - \frac{k_{i_0}+k_{i_{-1}}+6}{2}\epsilon <  \sum_{\substack{k=1\\i\neq i_{0}}}^nA_{i_{-1}k}(X_{i_{-1}}-X_{k}),
+			\end{equation}
+			which we rearrange to write as
+			\begin{equation}{\label{eq:approxInequality6}}
+				3(X_{i_0}-X_{i_{-1}}) - (X_{i_1}-X_{i_0}) - \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(X_k-X_{i_0}) - \frac{k_{i_0}+k_{i_{-1}}+6}{2}\epsilon < \sum_{\substack{k=1\\i\neq i_{0}}}^nA_{i_{-1}k}(X_{i_{-1}}-X_{k}).
+			\end{equation}
+			Now \eqref{eq:approxInequality} can be rewritten as
+			\begin{equation*}
+				-4(X_{i_1}-X_{i_0}) + \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_0k}(X_{i_0}-X_{k}) > -\frac{k_{i_0}+k_{i_1}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_1k}(X_{k}-X_{i_1}) 
+			\end{equation*}
+			and applied to \eqref{eq:approxInequality5},
+			\begin{multline}{\label{eq:approxInequality7}}
+				\Theta(\epsilon_0) = 3(X_{i_0}-X_{i_{-1}}) + 3(X_{i_1}-X_{i_0}) - \frac{k_{i_0}+k_{i_{-1}}+6}{2}\epsilon - \frac{k_{i_1}+k_{i_0}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_{0}}}^nA_{i_{1}k}(X_k-X_{i_1}) \\< \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_{-1}k}(X_{i_{-1}}-X_k) 
+			\end{multline}
+		\item In this case, we begin with \eqref{eq:approxInequality4} and apply \eqref{eq:approxInequality6} to write
+			\begin{multline}{\label{eq:approxInequality8}}
+				\Theta(\epsilon_0) = 3(X_{i_2}-X_{i_1}) + 2(X_{i_1}-X_{i_0}) + 3(X_{i_0}-X_{i_1}) - \frac{k_{i_{-1}}+k_{i_0}+6}{2}\epsilon -\frac{k_{i_{0}+k_{i_1}}+6}{2}\epsilon - \frac{k_{i_1}+k_{i_2}+6}{2}\epsilon \\< \sum_{\substack{k=1\\k\neq i_1}}^nA_{i_2k}(X_k-X_{i_2}) + \sum_{\substack{k=1\\k\neq i_0}}^nA_{i_{-1}k}(X_{i_{-1}}-X_k)  
+			\end{multline}
+        \end{enumerate}
+	To finish the proof, suppose we have a sequence $i_{-m},\ldots,i_0,i_1,\ldots,i_{l}$ of neighboring nodes that are monotonic in their node values and that
+	\begin{multline}{\label{eq:approxInequality9}}
+		3(X_{i_{l}}-X_{i_{l-1}}) + 2(X_{i_{l-1}}-X_{i_{l-2}}) + \cdots + 2(X_{i_{-m+2}}-X_{i_{-m+1}}) + 3(X_{i_{-m+1}}-X_{i_{-m}}) + O(\epsilon) \\< \sum_{\substack{k=1\\k\neq i_{l-1}}}^nA_{i_{l}k}(X_k-X_{i_{l}}) + \sum_{\substack{k=1\\k\neq i_{-m+1}}}^nA_{i_{-m}k}(X_{i_{-m}}-X_k)
+	\end{multline}
+	We consider several cases:
+	\begin{enumerate}[1.]
+	\item There exists a neighbor $i_{l+1}$ of $i_l$ such that $X_{i_{l+1}}>X_{i_l}$ and $X_{i_{l+1}}-X_{i_l} = \Theta(\epsilon_0)$. In this case, the definition \ref{eq:greedyUpdateRule} of $\beta(p,q)$ implies
+		\begin{equation}{\label{eq:approxInequality10}}
+			4(X_{i_{l+1}}-X_{i_{l}}) - \sum_{\substack{k=1\\k\neq i_{l+1}}}^nA_{i_{l}k}(X_{i_{l}}-X_k) - \frac{k_{i_{l}}+k_{i_{l+1}}+6}{2}\epsilon < \sum_{\substack{k=1\\k\neq i_{l}}}^nA_{i_{l+1}k}(X_{k}-X_{i_{l+1}}),
+		\end{equation}
+		which we rewrite as
+		\begin{equation}{\label{eq:approxInequality11}}
+			3(X_{i_{l+1}}-X_{i_l}) - (X_{i_l}-X_{i_{l-1}}) - \frac{k_{i_l}+k_{i_{l+1}}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_{l}}}^nA_{i_{l+1}k}(X_{k}-X_{i_{l+1}}) < \sum_{\substack{k=1\\k\neq i_{l-1}}}^nA_{i_{l}k}(X_{i_{l}}-X_k), 
+		\end{equation}
+		and which we apply to \eqref{eq:approxInequality9} to obtain
+	\begin{multline}{\label{eq:approxInequality12}}
+		\Theta(\epsilon_0) = 3(X_{i_{l+1}}-X_{i_{l}}) + 2(X_{i_{l}}-X_{i_{l-1}}) + \cdots + 2(X_{i_{-m+2}}-X_{i_{-m+1}}) + 3(X_{i_{-m+1}}-X_{i_{-m}}) + O(\epsilon) \\< \sum_{\substack{k=1\\k\neq i_{l}}}^nA_{i_{l+1}k}(X_k-X_{i_{l+1}}) + \sum_{\substack{k=1\\k\neq i_{-m+1}}}^nA_{i_{-m}k}(X_{i_{-m}}-X_k)
+	\end{multline}
+	\item There exists a neighbor $i_{-m-1}$ of $i_{-m}$ such that $X_{i_{l+1}}-X_{i_l}$ and $X_{i_{-m}}-X_{i_{-m-1}} = \Theta(\epsilon_0)$.  This case is essentially the same as the previous case.  We use the inequality
+		\begin{multline}{\label{eq:approxInequality13}}
+			3(X_{i_{-m}}-X_{i_{-m-1}}) - (X_{i_{-m+1}}-X_{i_{-m}}) - \frac{k_{i_{-m-1}}+k_{i_{-m}}+6}{2}\epsilon - \sum_{\substack{k=1\\k\neq i_{-m}}}^nA_{i_{-m-1}k}(X_{i_{-m-1}}-X_{k}) \\< \sum_{\substack{k=1\\k\neq i_{-m+1}}}^nA_{i_{-m}k}(X_k-X_{i_{-m}})
+		\end{multline}
+		on \eqref{eq:approxInequality9} to obtain
+	\begin{multline}{\label{eq:approxInequality14}}
+		\Theta(\epsilon_0) = 3(X_{i_{l}}-X_{i_{l-1}}) + 2(X_{i_{l-1}}-X_{i_{l-2}}) + \cdots + 2(X_{i_{-m+1}}-X_{i_{-m}}) + 3(X_{i_{-m}}-X_{i_{-m-1}}) + O(\epsilon) \\< \sum_{\substack{k=1\\k\neq i_{l-1}}}^nA_{i_{l}k}(X_k-X_{i_{l}}) + \sum_{\substack{k=1\\k\neq i_{-m}}}^nA_{i_{-m-1}k}(X_{i_{-m-1}}-X_k)
+	\end{multline}
+	\item Both cases 1. and 2. hold. Here, we obtain both $i_{l+1}$ and $i_{-m-1}$ as in cases 1. and 2. and we apply \eqref{eq:approxInequality13} to \eqref{eq:approxInequality12} to obtain
+	\begin{multline}{\label{eq:approxInequality15}}
+		\Theta(\epsilon_0) = 3(X_{i_{l+1}}-X_{i_{l}}) + 2(X_{i_{l}}-X_{i_{l-1}}) + \cdots + 2(X_{i_{-m+1}}-X_{i_{-m}}) + 3(X_{i_{-m}}-X_{i_{-m-1}}) + O(\epsilon) \\< \sum_{\substack{k=1\\k\neq i_{l}}}^nA_{i_{l+1}k}(X_k-X_{i_{l+1}}) + \sum_{\substack{k=1\\k\neq i_{-m}}}^nA_{i_{-m-1}k}(X_{i_{-m-1}}-X_k)
+	\end{multline}
+	\end{enumerate}
+	The procedure above generates an arbitrarily long finite sequence of adjacent nodes with monotonically increasing node values. This is a contradiction, since the graph is finite. 
+	\end{enumerate}
+\end{proof}
+
+The following proposition shows how the total discordance in defintion \ref{defn:totalDiscordance}, or equivalently, the consensus error in definition \ref{defn:consensusError} change when a $\alpha$ update occurs.
+\begin{proposition}{\label{prop:discChange}}
+	Assume that nodes $p,q\in\mathcal{V}(G)$ and $(p,q)\in\mathcal{E}(G)$ are updated at time-step $k$ via the update rule \eqref{eq:generalUpdateRule2}. Then the change in total discordance at time-step $k$ is given by
+\begin{equation}{\label{prop:eq:discIncrement}}
+	d(X,k+1)-d(X,k) = -4\beta_k(1-\beta_k)n(X_p(k)-X_q(k))^2
+\end{equation}
+Equivalently, the consensus error changes as
+\begin{equation}{\label{prop:eq:errorIncrement}}
+	e(X,k+1) - e(X,k) = -2\beta_k(1-\beta_k)(X_p(k)-X_q(k))^2.
+\end{equation}
+\end{proposition}
+\begin{proof}
+	We need to consider the difference $d(X,k+1)-d(X,k)$.  Assume that nodes $p,q\in\mathcal{V}(G)$ are updated at timestep $k+1$; thus, the random variables in the calculation below are conditioned on $p,q$ being updated at time $k+1$.  What follows is just a calculation of $d(X,k+1)-d(X,k)$:
+\begin{align}
+d(X,k+1)-d(X,k)&= \sum_{i,j=1}^n\left((X_i(k+1)-X_j(k+1))^2-(X_i(k)-X_j(k))^2\right)\nonumber\\
+&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k+1)-X_j(k))^2-(X_p(k)-X_j(k))^2\right)\nonumber \\
+&\quad+ 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_q(k+1)-X_j(k))^2-(X_q(k)-X_j(k))^2\right)\nonumber \\ 
+&\quad+ 2\left((X_p(k+1)-X_q(k+1))^2 - (X_p(k)-X_q(k))^2)\right) \nonumber \\
+&= 2\sum_{\substack{j=1\\j\neq p,q}}^n((\beta_k X_p(k)+(1-\beta_k) X_q(k))-X_j(k))^2 + 2\sum_{\substack{j=1\\j\neq p,q}}^n(((1-\beta_k) X_p(k)+ \beta_k X_q(k))-X_j(k))^2\nonumber\\
+&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k)-X_j(k))^2+(X_q(k)-X_j(k))^2\right)\nonumber \\
+&\quad+ 2\left((\beta_kX_p(k)+(1-\beta_k)X_q(k) - ((1-\beta_k)X_p(k)+\beta_kX_q(k))^2 - (X_p(k)-X_q(k))^2\right)\label{prop:discChange:calc1}\\
+&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\beta_k^2(X_p(k)-X_j(k))^2 + 2\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k))\right.\nonumber\\
+&\qquad+ \left.(1-\beta_k)^2(X_q(k)-X_j(k))^2\right)+2\sum_{\substack{j=1\\j\neq p,q}}^n\left((1-\beta_k)^2(X_p(k)-X_j(k))^2\right.\nonumber\\
+&\qquad+ \left.2\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k)) + \beta_k^2(X_q(k)-X_j(k))^2\right)\nonumber\\
+&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((X_p(k)-X_j(k))^2+(X_q(k)-X_j(k))^2\right) \nonumber \\
+&\quad- 2\left(1-(\beta_k-(1-\beta_k))^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc2}\\
+&= 2\sum_{\substack{j=1\\j\neq p,q}}^n\left(\beta_k^2(X_p(k)-X_j(k))^2 + 2\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k))\right. \nonumber\\
+&\qquad+ \left.(1-\beta_k)^2(X_q(k)-X_j(k))^2\right) + 2\sum_{\substack{j=1\\j\neq p,q}}^n\left((1-\beta_k)^2(X_p(k)-X_j(k))^2\right. \nonumber\\
+&\qquad+ \left.2\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k))+ \beta_k^2(X_q(k)-X_j(k))^2\right) \nonumber\\
+&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n(\beta_k^2+2\beta_k(1-\beta_k)+(1-\beta_k)^2)(X_p(k)-X_j(k))^2\nonumber\\
+&\quad- 2\sum_{\substack{j=1\\j\neq p,q}}^n((1-\beta_k)^2+2\beta_k(1-\beta_k)+\beta_k^2)(X_q(k)-X_j(k))^2 \nonumber\\
+&\quad- 2\left(1-(\beta_k-(1-\beta_k))^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc3}\\
+&= 4\sum_{\substack{j=1\\j\neq p,q}}^n\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k))\nonumber\\
+&\quad+ 4\sum_{\substack{j=1\\j\neq p,q}}^n\beta_k(1-\beta_k)(X_p(k)-X_j(k))(X_q(k)-X_j(k)) - 4\sum_{\substack{j=1\\j\neq p,q}}^n\beta_k(1-\beta_k)(X_p(k)-X_j(k))^2\nonumber\\
+&\quad-4\sum_{\substack{j=1\\j\neq p,q}}^n2\beta_k(1-\beta_k)(X_q(k)-X_j(k))^2 - 2\left(1-(\beta_k-(1-\beta_k))^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc4}\\
+&= -4\beta_k(1-\beta_k)\sum_{\substack{j=1\\j\neq p,q}}^n(X_p(k)-X_q(k))^2 - 2\left(1-(\beta_k-(1-\beta_k))^2\right)(X_p(k)-X_q(k))^2\label{prop:discChange:calc5}\\
+&= -(4\beta_k(1-\beta_k)(n-2)+2(1-(\beta_k-(1-\beta_k))^2)(X_p(k)-X_q(k))^2\label{prop:discChange:calc6}
+\end{align}
+Lastly, equation \eqref{prop:eq:errorIncrement} is due to proposition \ref{prop:discErrorRelationship}.
+\end{proof}
+
+Finally, we state the convergence result for the $\alpha$-update. Note: this needs to be generalized to cover update rules other than the greedy update. This shouldn't be hard to do.
+\begin{theorem}{\label{theorem:betaConvergence}}
+	Assume that at each timestep $k$, the pair of nodes $p^*,q^*$ from \eqref{eq:greedyUpdateRule2} are updated.  Then, for any initial condition $X_0$, $e(X,k)\to0$.
+\end{theorem}
+\begin{proof}
+	First, note that $1-\beta(p,q) \geq \beta(p,q)$ since $\beta(p,q)\leq1/2$. By propositions \ref{prop:discChange} and \ref{proposition:errorUpdateEquivalence},
+	\begin{align}{\label{eq:betaConvergenceProof}}
+		e(X,k+1) &= \left(1-\frac{2\beta(p_k^*,q_k^*)(1-\beta(p_k^*,q_k^*))(X_{p_k^*}(k)-X_{q_{k}^*}(k))^2}{e(X,k)}\right)e(X,k)\\
+			 &\leq \left(1-\frac{2\beta(p_k^*,q_k^*)^2(X_{p_k^*}(k)-X_{q_{k}^*}(k))^2}{e(X,k)}\right)e(X,k)\\
+			 &\leq (1-2c_*(G)^2)e(X,k)
+	\end{align}
+	By proposition \ref{proposition:errorUpdateEquivalence}, $0<c^*(G)\leq 1/2$.  Therefore, \eqref{eq:betaConvergenceProof} implies that the greedy $\beta$-update converges.
+\end{proof}
+
+\subsection{Existence of an Update for the ``meet-in-the-middle'' Update}
+
+The following corollary directly follows from proposition \ref{prop:discChange}:
+\begin{corollary}{\label{cor:recurrenceRelation}}
+The consensus error satisfies the recurrence relation
+\begin{equation}{\label{eq:discordanceRecurrence}}
+e(X,k+1)=(1-\alpha(k|p,q))e(X,k)
+\end{equation}
+where
+\begin{equation}{\label{eq:alphaDefn}}
+	\alpha(k|p,q) = \frac{4\alpha_k(1-\alpha_k)n(X_p(k)-X_q(k))^2}{d(X,k)} = \frac{2\alpha_k(1-\alpha_k)(X_p(k)-X_q(k))^2}{e(X,k)}.
+\end{equation}
+\end{corollary}
+
+\subsection{Miscellaneous}
+In this section, we include some stuff that may be useful later.
+
+We first prove the following lemma, which says that the total number of nodes ``between'' pairs of adjacent nodes is greater than the total number of nodes above and below pairs of adjacent nodes. 
+\begin{lemma}{\label{lemma:kpluskminus}}
+	Denote $k_p^+$ the number of neighbors $k$ of node $p$ such that $x_k>x_p$ and denote $k_p^-$ the number of neighbors $k$ of node $p$ such that $x_k<x_p$. The following holds
+	\begin{equation}
+		\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p^++k_q^-) - \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p^-+k_q^+) = -\sum_{p=1}^n(k_p^+-k_p^-)^2.
+	\end{equation}
+\end{lemma}
+\begin{proof}
+	Note the following equalities 
+	\begin{equation}{\label{lemma:kpluskminus:eq:equalities}}
+	\begin{aligned}
+		&\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_p^+ = \sum_{p=1}^nk_p^+k_p^- \quad &\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_q^- = \sum_{q=1}^nk_q^+k_q^-\\
+		&\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_p^- = \sum_{p=1}^n(k_p^-)^2 \quad &\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}k_q^+ = \sum_{q=1}^n(k_q^+)^2.
+	\end{aligned}
+	\end{equation}
+	The proof follows from the following, where we use \eqref{lemma:kpluskminus:eq:equalities}: 
+	\begin{equation}{\label{lemma:kpluskminus:eq:negative}}
+		\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}((k_p^++k_q^-) - (k_p^-+k_q^+)) = -\sum_{p=1}^n\left((k_p^+)^2+(k_p^-)^2-2k_p^+k_p^-\right) = -\sum_{p=1}^n(k_p^+-k_p^-)^2 
+	\end{equation}
+\end{proof}
+
+\begin{definition}{\label{defn:minDecomposition}}
+	We define a \textit{minimum value decomposition} of a graph $G$ with values $X_i\in\R$ assigned to the nodes $i\in\mathcal{V}(G)$ as a sequence of sets $M_0,\ldots,M_d$ of nodes, where $d$ is referred to as the \textit{depth} of the decomposition, such that
+	\begin{enumerate}
+		\item For all $i\in M_k$ and for all $j\in\mathcal{V}(G)$ adjacent to $i$ satisfying $X_j<X_i$, we have $j\in\cup_{l=0,k-1}M_l$.
+		\item \begin{equation}\cup_{l=0}^d M_l=\mathcal{V}(G)\end{equation}.
+	\end{enumerate}
+\end{definition}
+In the following proposition, we present an algorithm for obtaining a minimum value decomposition.
+\begin{proposition}{\label{proposition:decompositionOfGraph}}
+	A minimal value decomposition can be constructed via the following algorithm:
+	\begin{enumerate}
+		\item Let $M_0$ be the set of all locally minimal nodes, where a node $i$ is locally minimal if all nodes $j$ adjacent to $i$ satisfy $X_i\leq X_j$.
+		\item Given $M_0,\ldots,M_k$, if $M_0\cup\cdots\cup M_k\neq\mathcal{V}(G)$, let
+			\begin{equation}{\label{proposition:decompositionOfGraph:eq:setDefn}}
+				M_{k+1}=\left\{i\in\mathcal{V}(G)-M_0\cup\cdots\cup M_k: j\in\mathcal{V}(G)\text{ and } X_j\leq X_i \implies j\in M_0\cup\cdots\cup M_k\text{ or } X_j=X_i\right\}
+			\end{equation}
+	\end{enumerate}
+\end{proposition}
+\begin{proof}
+	$M_0$ is nonempty since the graph $G$ is finite. We show that given $M_0,\ldots,M_k$ constructed via the algorithm above, where $M_0\cup\cdots\cup M_k\neq \mathcal{V}(G)$, $M_{k+1}$ defined by \eqref{proposition:decompositionOfGraph:eq:setDefn} is nonempty. Indeed, this is clearly true since the set $\mathcal{V}(G)-M_0\cup\cdots\cup M_k$ is finite, so there must exist a set of minimal nodes $i_1,\ldots,i_r$ satisfying $x_{i_l}\leq x_{j}$ for all neighbors $j$ of $i_l$ and $j\in\mathcal{V}(G)-M_0\cup\cdots\cup M_k$. Therefore, the algorithm must cease and the depth $d$ of the resulting minimal value decomposition satisfies $d\leq n$.
+\end{proof}
+
+\begin{proposition}{\label{proposition:uniqueMinDecomposition}}
+	Given a graph $G$ with values $X_i\in\R$ assigned to the nodes $i\in\mathcal{V}(G)$, the algorithm in Proposition \ref{proposition:decompositionOfGraph} generates a minimal value decomposition of minimal depth. 
+\end{proposition}
+\begin{proof}
+	Let $M_0,\ldots,M_d$ be the minimal value decomposition generated by the algorithm in Proposition \ref{proposition:decompositionOfGraph} and let $\tilde{M}_0,\ldots,\tilde{M}_{\tilde{d}}$ be any other minimal value decomposition. We wish to show that 
+	\begin{equation}{\label{eq:proposition:uniqueMinDecomposition:eq:claim}}
+		M_0\cup\ldots\cup M_k \supseteq \tilde{M}_0\cup\ldots\cup\tilde{M}_k \implies M_0\cup\ldots\cup M_{k+1}\supseteq \tilde{M}_0\cup\ldots\cup\tilde{M}_{k+1}.
+	\end{equation}
+	Suppose $i \in \tilde{M}_1$.  Then all $j\in\mathcal{V}(G)$ adjacent to $i$ satisfying $X_j<X_i$ satisfy $j\in\tilde{M}_0=M_0$.  Thus, $M_1$ constructed via \eqref{proposition:decompositionOfGraph:eq:setDefn} by definition contains $i$.  Therefore, \eqref{eq:proposition:uniqueMinDecomposition:eq:claim} holds with $k=0$.
+	Suppose \eqref{eq:proposition:uniqueMinDecomposition:eq:claim} holds. Suppose $i\in\tilde{M}_{k+1}$. Then for all $j\in\mathcal{V}(G)$ adjacent to $i$ such that $X_j<X_i$ we have 
+\begin{equation}{\label{proposition:uniqueMinDecomposition:eq:2}}
+j\in \tilde{M}_0\cup\cdots\cup \tilde{M}_k \subseteq M_0\cup\cdots\cup M_k.
+\end{equation}  
+Therefore, by the definition of $M_l$ in \eqref{proposition:decompositionOfGraph:eq:setDefn}, \eqref{proposition:uniqueMinDecomposition:eq:2} implies that $i\in M_l$ for some $l\leq k+1$. Thus, 
+\begin{equation}
+	M_0\cup\cdots\cup M_{k+1} \supseteq \tilde{M}_0\cup\cdots\cup\tilde{M}_{k+1}.
+\end{equation}
+\end{proof}
+%We have the following proposition as a result of Lemma \ref{lemma:kpluskminus},
+%\begin{proposition}{\label{prop:existenceOfUpdate}}
+%	For any graph $G$ and any vector $X\in\R^n$ of values indexed by the nodes of $G$, there exists a pair of adjacent nodes $p,q\in\mathcal{V}(G)$, where we assume $x_p>x_q$, and a $\beta>0$ sufficiently small such that a discordance decreasing $\alpha$-equal agreement, with $\alpha=\beta(x_p-x_q)$ is possible between nodes $p$ and $q$.
+%\end{proposition}
+%\begin{proof}
+%Consider equation \eqref{lemma:ddInequality:eq:Derivation}.  Substituting $\alpha\mapsto\beta(x_p-x_q)$, we find that for an update at edge $(p,q)$ to be viable,
+%\begin{equation}{\label{eq:betaAlphaCondition}}
+%	2\left(\sum_{\substack{k=1\\k\neq q}}^nA_{pk}(x_k-x_p) + \sum_{\substack{k=1\\k\neq p}}^nA_{qk}(x_q-x_k) - 4(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0.
+%\end{equation}
+%or equivalently
+%\begin{equation}{\label{eq:betaAlphaCondition2}}
+%	2\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + (k_p+k_q+6)\beta(x_p-x_q) < 0.
+%\end{equation}
+%We consider summing \eqref{eq:betaAlphaCondition} over all pairs $p,q\in\mathcal{V}(G)$ of adjacent nodes with $x_p>x_q$; i.e. we evaluate
+%\begin{equation}{\label{prop:existenceOfUpdate:eq:sum}}
+%	\begin{aligned}
+%		\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + \frac{k_p+k_q+6}{2}\beta(x_p-x_q)\right)
+%	\end{aligned}
+%\end{equation}
+%We find that 
+%\begin{equation}{\label{prop:existenceOfUpdate:eq:sumVals}}
+%	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k)\right) = \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)\right)(x_p-x_q)
+%\end{equation}
+%Thus, \eqref{prop:existenceOfUpdate:eq:sum} can be written as
+%\begin{multline}{\label{prop:existenceOfUpdate:eq:sumRewrite}}
+%	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\left(\sum_{k=1}^nA_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k) - 2(x_p-x_q)\right) + \frac{k_p+k_q+6}{2}\beta(x_p-x_q)\right)\\
+%	= \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)-2+\beta\frac{k_p+k_q+6}{2}\right)(x_p-x_q).
+%\end{multline}
+%By Lemma \ref{lemma:kpluskminus}, we know there exists at least one Th
+%\end{proof}
+%\begin{equation}
+%	\begin{aligned}
+%	\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(\sum_{k=1}^n\right.&\left.A_{pk}(x_k-x_p) + \sum_{k=1}^nA_{qk}(x_q-x_k)\right) = \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}\left(k_p^++k_q^--(k_p^-+k_q^+)\right)(x_p-x_q)\\
+%		&= 2\sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p^++k_q^-)(x_p-x_q) - \sum_{p,q=1}^nA_{pq}1\{x_p>x_q\}(k_p+k_q)(x_p-x_q)
+%	\end{aligned}
+%\end{equation}
+%We prove the following lemma, which gives an alternative proof of Proposition \ref{prop:betaUpdateConvergence} and gives a lower bound for $\beta^*$.
+%\begin{lemma}{\label{lemma:betaLowerBound}}
+%        Suppose the nodes $p,q\in\mathcal{V}(G)$ are adjacent and updateable, meaning that equation \eqref{eq:betaCondition2} holds.  Denote $k_i$ the degree of node $i\in\mathcal{V}(G)$ and denote .  Then
+%        \begin{equation}
+%                \beta^*(p,q) \geq \frac{6}{}
+%        \end{equation}
+%        In particular, let $K$ be defined by
+%        \begin{equation}
+%                K = \max_{\substack{i,j\in\mathcal{V}(G)\\(i,j)\in\mathcal{E}(G)}} (k_i+k_j),
+%        \end{equation}
+%\end{lemma}
+
+\section{Notes following May 31 Meeting}
+
+\subsection{Characterization of Meet-in-the-Middle Graphs}
+
+Given an assignment $X\in\R^n$ of values to the nodes of a graph $G$, we call a pair of adjacent nodes $p,q\in\mathcal{V}(G)$ \textit{meet-in-the-middle updateable} if the meet-in-the-middle update of $p$ and $q$ is discordance decreasing. We call a graph $G$ \textit{meet-in-the-middle updateable} if for every assignment of values $X\in\R^n$ to the nodes of the graph $G$ there exists an adjacent pair of nodes $i,j\in\mathcal{V}(G)$ that is meet-in-the-middle updatable.
+\begin{theorem}{\label{theorem:MIMcharacterization}}
+	Denote $k_i$ the degree of node $i\in\mathcal{V}(G)$ and denote $s(i,j)$ the number of shared neighbors of $i$ and $j$, where the number of shared neighbors does not include $i,j$. A graph $G$ is meet-in-the-middle updateable iff there is no cut-set of edges $C\subset\mathcal{E}(G)$ satisfying 
+	\begin{equation}{\label{theorem:MIMcharacterization:eq:1}}
+		\frac{k_i+k_j+6}{4} \geq 4 + s(i,j). 
+	\end{equation}
+for all $(i,j)\in C$.
+\end{theorem}
+\begin{example}{\label{ex:noTrianglesGraph}}
+	Consider a graph $G$ of $n$ nodes with no triangles. In this case, $s(i,j)=0$ for all $i,j$, so for theorem \ref{theorem:MIMcharacterization} to imply that the graph $G$ is meet-in-the-middle updateable, we require that every cut-set has an edge $(i,j)$ such that
+	\begin{equation}{\label{ex:pathGraph:eq:1}}
+		k_i + k_j < 10
+	\end{equation}
+	In particular, if a tree has a single pair of adjacent nodes satisfying \eqref{ex:pathGraph:eq:1} then there exist assignments of values to the nodes of the graph such that there are no meet-in-the-middle updateable pairs of nodes. Even more in particular
+	\begin{enumerate}
+		\item A star graph of $n$ total nodes. By \eqref{ex:pathGraph:eq:1}, we must have $n<10$ for the graph to be meet-in-the-middle updateable.
+		\item A lattice in $\mathcal{Z}^n$ is meet-in-the-middle updateable iff $n<3$.
+		\item etc.?
+	\end{enumerate}
+\end{example}
+\begin{example}{\label{ex:removedCompleteGraph}}
+	Consider the complete graph of $n$ nodes $G$ with $k<(n-1)/2$ edges removed from each vertex.  Then, the minimum number of shared neighbors between two nodes $i$ and $j$ is $n-1-2k$. For theorem \ref{theorem:MIMcharacterization} to imply that $G$ is meet-in-the-middle updateable, every cut set must have a pair of nodes $i,j\in\mathcal{V}(G)$ satisfying
+	\begin{equation}{\label{ex:removedCompleteGraph:eq:1}}
+		2n-2 = k_i+k_j < 10 + 4s(i,j).
+	\end{equation} 
+	Now,
+	\begin{equation}{\label{ex:removedCompleteGraph:eq:2}}
+		s(i,j) \geq n-1-2k.
+	\end{equation}
+	so combining \eqref{ex:removedCompleteGraph:eq:1} and \eqref{ex:removedCompleteGraph:eq:2} we find that if
+	\begin{equation}{\label{ex:removedCompleteGraph:eq:3}}
+		k < \frac{n}{4}-1.
+	\end{equation}
+	then all pairs of nodes satisfy \eqref{ex:removedCompleteGraph:eq:1} so $G$ is meet-in-them-middle updateable. Thus, for all graphs obtained from the complete graph by removing less than $n/4-1$ edges from each node, theorem \ref{theorem:MIMcharacterization} tells us that a meet-in-the-middle update is always possible.
+	
+%TODO: Sharper results for this graph
+%TODO: Probability of an ER graph being meet-in-the-middle updateable
+\end{example}
+%TODO: More examples. Real world graphs.
+
+[[Need more examples of graphs that are meet-in-the-middle updateable or not.  Non-trivial to determine whether a cut-set of the form required in theorem \ref{theorem:MIMcharacterization} exist?]]
+
+%\begin{example}{\label{ex:degreeMatching}}
+%	Suppose $i,j\in\mathcal{V}(G)$ and $k_i\geq k_j$.  Now, $s(i,j)\geq k_j-1$ so that $4+s(i,j)\geq 3+k_j$. Thus, theorem \ref{theorem:MIMcharacterization} implies the existence of a meet-in-the-middle updatable pair of nodes only if
+%	\begin{equation}
+%		k_i < 6 + 3k_j
+%	\end{equation}
+%	for all adjacent nodes $i,j\in\mathcal{V}(G)$. In particular, if the graph has a leaf node, every node connected to the leaf node must be of degree less than $9$.
+%
+%	Degree discordant graphs, depending on the definition, are likely to have non-meet-in-the-middle updateable pairs of nodes.
+%\end{example}
+%\begin{definition}{\label{defn:cutGraph}}
+%Let $C\subset\mathcal{E}(G)$ be a cut-set of edges of a graph $G$. Let $\{A_i\}_{i=1}^r$ be the collection of connected components obtained after removal of the edges $C$. Consider the graph $H$ of $r$ nodes whose nodes are the components $\{A_i\}_{i=1}^r$ and whose edges are the cut edges $C$. We call $H$ the \textit{cut graph} of $G$ with respect to $C$.
+%\end{definition}
+%\begin{lemma}{\label{lemma:cutGraphLeaves}}
+%	Let $H$ be the cut-graph of a graph $G$ with respect to $C\subset\mathcal{E}(G)$. The following holds
+%	\begin{enumerate}
+%		\item If $H$ contains both degree $1$ nodes and degree $k>1$ nodes, then there exists a cut-set $C'\subset C$ such that the cut graph $H'$ of $G$ with respect to $C'$ contains no degree $1$ nodes.
+%		\item If $H$ is a tree, then there exists a cut-set $C'\subset C$ such that $C'$ consists of a single edge.
+%\end{lemma}
+%\begin{proof}
+%	\begin{enumerate}
+%		\item Form $C'$ from $C$ by removing the edges $(i,j)\in C$ where $i$ or $j$ is a degree $1$ nodes.  Then the cut graph $H'$ formed from $C'$ is non-trivial and contains no degree $1$ nodes.
+%		\item Form $C'$ from $C$ by taking a single edge.  Then the cut graph $H'$ with respect to $C'$ consists of a single edge, and thus, will be disconnected by removing the edge $(i,j)\in C'$.  Therefore, $C'$ is a cut-set.
+%\end{proof}
+%
+%\begin{lemma}{\label{lemma:cutGraphOrientations}}
+%	Let $C$ be a cut-set of a graph $G$. Then, there exists a cut-set $C'\subset C$ of $G$ such that the edges of the cut-graph $H'$ of $G$ with respect to $C'$ can be assigned orientations $O$ in such a way that the oriented graph $H'(O)$ is acyclic and contains at most $1$ source and $1$ sink.
+%\end{lemma}
+%\begin{proof}
+%	By lemma \ref{lemma:cutGraphLeaves}, we may assume that the cut-set $C'\subset C$ generates a cut-graph $H'$ of $G$ that either consists of a single edge between $2$ nodes or consists of nodes whose degrees are at least $2$. In the case $H'$ is a single edge on $2$ nodes, the oriented graph $H'(O)$ can be formed by assigning an arbitrary orientation to the one edge.
+%
+%	Suppose $H'$ consists of nodes whose degrees are at least $2$.  Then, 
+%\end{proof}
+
+
+
+\begin{proof}[Proof of Theorem \ref{theorem:MIMcharacterization}]
+\begin{enumerate}
+	\item ($\implies$). Assume there is a cut-set $C$ of edges satisfying \eqref{theorem:MIMcharacterization:eq:1} for all $(i,j)\in C$. We wish to construct an assignment of values $X\in\R^n$ to the nodes of the graph such that no meet-in-the-middle update is possible among the adjacent nodes of the graph. Accordingly, denote by $G_1$ and $G_2$ the connected components of the graph $G$ after removal of $C$. For all $i\in G_1$, set $X_i = a$ and for all $i\in G_2$, set $X_i = b$, where $a,b\in\R$ such that $a\neq b$.
+	
+		With $X$ constructed as above, no edges $(i,j)\in \mathcal{E}(G_1)$ or $(i,j)\in \mathcal{E}(G_2)$ are meet-in-the-middle updateable, since $X_i=X_j$ for such $(i,j)$.  It remains to show that the edges $(i,j)\in C$ are not meet-in-the-middle updateable.
+	
+		Denote $S(i,j)$ the set of shared neighbors of $i$ and $j$. Assuming $X_i>X_j$, in order for the meet-in-the-middle update between nodes $i$ and $j$ to not be possible, it is required that
+		\begin{equation}{\label{theorem:MIMcharacterization:eq:12}}
+			\frac{k_i+k_j+6}{2}(X_i-X_j) \geq (4+s(i,j))(X_i-X_j) - \sum_{\substack{k=1\\k\not\in S(i,j)\cup\{j\}}}^nA_{ik}(X_k-X_i) - \sum_{\substack{k=1\\k\not\in S(i,j)\cup\{i\}}}^nA_{jk}(X_j-X_k).
+		\end{equation}
+\end{enumerate}
+\end{proof}
+
+\subsection{Convergence Improved}
+
+\begin{proposition}{\label{proposition:errorUpdateEquivalenceImproved}}
+        There exist constants $c_*(G),c^*(G)\in\R_{>0}$, independent of $X$, such that
+        \begin{equation}
+		c_*(G)e(X)^{1/2} \leq \beta(p^*,q^*)|X_{p^*}-X_{q^*}| \leq c^*(G)e(X)^{1/2},
+        \end{equation}
+where $c^*(G) = \sqrt{n/2}$ and 
+	\begin{equation}
+		c_*(G) \geq \frac{1}{m(m+n)},
+	\end{equation}
+	where $m=|\mathcal{E}(G)|$ and $n=|\mathcal{V}(G)|$.
+\end{proposition}
+\begin{proof}
+        \begin{enumerate}
+                \item Upper Bound. We know that $\beta\leq1/2$ and $(X_p-X_q)^2 \leq d(X|G)$, so
+                        \begin{equation}{\label{eq:updateSizeBound1}}
+                                (\beta^*(X_{p^*}-X_{q^*}))^2\leq \frac{1}{4}d(X|G)
+                        \end{equation}
+                        Thus by proposition \ref{prop:discErrorRelationship},
+                        \begin{equation}{\label{eq:updateSizeBound2}}
+                                (\beta^*(X_{p^*}-X_{q^*}))^2 \leq \frac{n}{2}e(X).
+                        \end{equation}
+                        This bound is tightest bound independent of $X$, as can be seen by letting the values associated with two adjacent nodes $i$ and $j$ be distinct and letting every other node $k$ have value $(x_i+x_j)/2$. This works for any connected graph of $n\geq2$ nodes.
+		\item Lower Bound. Given adjacent nodes $p,q\in\mathcal{V}(G)$ with $X_p>X_q$, let $\beta'(p,q)$ satsify the following equality
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:1}}
+				\sum_{k=1}^nA_{pk}(X_k-X_p) = \left(2 - \frac{k_p+k_q+6}{2}\beta'(p,q)\right)(X_p-X_q) + \sum_{k=1}^nA_{qk}(X_k-X_q) 
+			\end{equation}
+			for a given $X\in\R^n$.
+
+			Let $\mathcal{P}(G,X)$ denote the set of all paths that are monotonically increasing in the values $X_{l}$ and such that if $i_l$ is a node in the path, then $i_{l+1}$ is such that $X_{i_{l+1}}-X_{i_{l}}$ is maximized among nodes adjacent to $i_l$. Denote $P=(i_{-L},\ldots,i_M) \in \mathcal{P}(G,X)$ define the value $\beta_*$ as follows:
+			\begin{multline}{\label{eq:betaStarDefn}}
+				\beta_* = \inf_{X\in\R^n}\inf_{P=(i_{-L},\ldots,i_M)\in\mathcal{P(G,X)}}\left(\frac{(X_{i_M}-X_{i_{-L}}) + \sum_{k=1}^nA_{i_{M}k}1\{X_{k}<X_{i_M}\}(X_{i_{M}}-X_{k})}{\frac{1}{2}\sum_{l=-L}^{M-1}(k_{i_{l+1}}+k_{i_{l}})(X_{i_{l+1}}-X_{i_l}))}\right.\\ \left.+ \frac{\sum_{k=1}^nA_{i_{-L}k}1\{X_{i}>X_{i_{-L}}\}(X_{k}-X_{i_{-L}})}{\frac{1}{2}\sum_{l=-L}^{M-1}(k_{i_{l+1}}+k_{i_{l}})(X_{i_{l+1}}-X_{i_l}))}\right)
+			\end{multline}
+			
+			First, note that
+			\begin{align}
+				\beta_* &\geq \inf_{X\in\R^n}\inf_{P=(i_{-L},\ldots,i_M)\in\mathcal{P(G,X)}}\frac{1}{\frac{\sum_{l=-L}^{M-1}(k_{i_{l+1}}+k_{i_{l}})(X_{i_{l+1}}-X_{i_l})}{2(X_{i_M}-X_{i_L})}}\\
+					&\geq\inf_{P=(i_{-L},\ldots,i_M)\in\mathcal{P(G,X)}}\frac{1}{\frac{1}{2}\sum_{l=-L}^{M-1}(k_{i_{l+1}}+k_{i_l})}\\
+					&\geq \frac{1}{2m}
+			\end{align}
+			where $m=|\mathcal{E}(G)|$. Therefore, $\beta_*$ is bounded below.
+
+			Again, let $P=(i_{-L},\ldots,i_M)\in\mathcal{P}(G,X)$ be a monotone path of nodes. We prove the following equality
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:equality}}
+				\sum_{l=-L+1}^{M}\beta'(i_{l},i_{l-1})\frac{k_{i_{l}}+k_{i_{l-1}}+6}{2}(X_{i_l}-X_{i_{l-1}}) = 2(X_{i_{M}}-X_{i_{-L}}) + \sum_{k=1}^nA_{i_Mk}(X_{i_M}-X_k) + \sum_{k=1}^nA_{i_{-L}k}(X_k-X_{i_{-L}}).
+			\end{equation}
+			Indeed, applying equation \eqref{prop:errorUpdateEquivImproved:eq:1} to the adjacent pair $(i_{l-1},i_l)\in\mathcal{V}(G)$, we obtain
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:2}}
+				\frac{k_{i_l}+k_{i_{l-1}}+6}{2}\beta'(i_l,i_{l-1})(X_{i_l}-X_{i_{l-1}}) = 2(X_{i_{l}}-X_{i_{l-1}}) + \sum_{k=1}^nA_{i_lk}(X_{k}-X_{i_l})  = \sum_{k=1}^nA_{i_{l-1}k}(X_k-X_{i_{l-1}}). 
+			\end{equation}
+			Summing \eqref{prop:errorUpdateEquivImproved:eq:2} for all $i_{l-1},i_l$ between $l=-L+1,\ldots,M$, we obtain \eqref{prop:errorUpdateEquivImproved:eq:equality}. Now, assume that $\beta'(i_l,i_{l-1})<\beta_*$ for all $l=-L+1,\ldots,M$. Then, \eqref{prop:errorUpdateEquivImproved:eq:equality} and the definition \eqref{eq:betaStarDefn} of $\beta_*$ implies
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:summedBeta}}
+			\begin{aligned}
+				2(X_{i_{M}}-&X_{i_{-L}}) + \sum_{k=1}^nA_{i_Mk}(X_{i_M}-X_k) + \sum_{k=1}^nA_{i_{-L}k}(X_k-X_{i_{-L}}) 
+			\leq \beta^*\sum_{l=-L+1}^{M}\frac{k_{i_{l}}+k_{i_{l-1}}+6}{2}(X_{i_l}-X_{i_{l-1}})\\ 
+					    &\leq (X_{i_M}-X_{i_{-L}}) + \sum_{k=1}^nA_{i_Mk}1\{X_{i}<X_{i_M}\}(X_{i_M}-X_k) + \sum_{k=1}^nA_{i_{-L}k}1\{X_k>X_{i_{-L}}\}(X_k-X_{i_{-L}})
+			\end{aligned}
+			\end{equation}
+			and thus
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:bigExists}}
+			(X_{i_M}-X_{i_{-L}}) \leq \sum_{k=1}^nA_{i_Mk}1\{X_{k}>X_{i_M}\}(X_{i_M}-X_k) + \sum_{k=1}^nA_{i_{-L}k}1\{X_{k}<X_{i_{-L}}\}(X_k-X_{i_{-L}})
+			\end{equation}
+			If $i_M$ and $i_{-L}$ are locally maximal and minimal nodes respectively, then \eqref{prop:errorUpdateEquivImproved:eq:bigExists} leads to a contradiction. Therefore, we have shown that any path $P\in\mathcal{P}(G,X)$ between a local maximal and a local minimal node must contain a pair $i_p,i_{p+1}$ with $\beta'(i_p,i_{p_1})>\beta_*$. We now use \eqref{prop:errorUpdateEquivImproved:eq:bigExists} to show that there must exist a path of nodes that is ``large enough.''
+
+			It follows immediately by the definition of $d(X|G)$ and Lemma \ref{lemma:errorGraphDiscordanceRelationship} that there exists an adjacent pair of nodes $i_1$ and $i_0$ such that
+			\begin{equation}{\label{eq:largeEnoughDiff}}
+				(X_{i_1}-X_{i_0}) \geq \frac{d(X|G)}{2m}\geq\frac{\lambda_2(L)}{2m}e(X)^{1/2}.
+			\end{equation}
+			We now construct a path $P=(i_{q_*},i_{p_*},\ldots,i_0,i_1,\ldots,i_{q^*},i_{p^*})\in\mathcal{P}(G,X)$ such that $P$ passes through the nodes $i_0,i_1$ of \eqref{eq:largeEnoughDiff} and such that at least one of $i_{q_*},i_{p_*}$ and $i_{q^*},i_{p^*}$ satisfy
+			\begin{equation}
+				X_{i_p}-X_{i_q}\geq\frac{X_{i_1}-X_{i_0}}{2m-\frac{1}{2}\sum_{l=q_*+1}^{p^*}(k_{i_l}+k_{i_{l+1}})}\geq \frac{X_{i_1}-X_{i_0}}{2m}
+			\end{equation}
+			To begin, consider the pair $i_0,i_1$, which satisfies \eqref{prop:errorUpdateEquivImproved:eq:summedBeta} with $M=1,-L=0$. If $i_1$ and $i_0$ are locally minimal nodes, then we have shown already that $\beta'(i_1,i_0)>\beta_*$. Otherwise, assume $\beta'(i_1,i_0)<\beta_*$ so that either $i_1$ and $i_0$ is not locally minimal and \eqref{prop:errorUpdateEquivImproved:eq:3} holds with $M=1$ and $-L=0$. By \eqref{prop:errorUpdateEquivImproved:eq:3}, there must exist a $i_2$ adjacent to $i_1$ with
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:4}}
+				X_{i_2}-X_{i_1}\geq\frac{X_{i_1}-X_{i_0}}{k^+_{i_1}+k^-_{i_0}}
+			\end{equation}
+			or there must exist an $i_{-1}$ adjacent to $i_{0}$ with
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:5}}
+				X_{i_0}-X_{i_{-1}}\geq\frac{X_{i_1}-X_{i_0}}{k^+_{i_1}+k^-_{i_0}}.
+			\end{equation}
+			Assume that $i_2$ and/or $i_{-1}$ are the largest or smallest such nodes satisfying \eqref{prop:errorUpdateEquivImproved:eq:4} or \eqref{prop:errorUpdateEquivImproved:eq:5}, respsectively.
+
+			Set $i_{p^*},i_{q^*}$ either equal to $i_2,i_1$ or $i_1,i_1$ depending on if \eqref{prop:errorUpdateEquivImproved:eq:4} holds for some $i_2$ or not, and set $i_{p_*},i_{q_*}$ either equal to $i_0,i_{-1}$ or $i_0,i_0$ depending on if \eqref{prop:errorUpdateEquivImproved:eq:5} holds for some $i_{-1}$ or not. If $i_{p^*}$ and $i_{q_*}$ are locally maximal and minimal respectively, then it must be the case that $\beta'(i_{p^*},i_{q^*})>\beta_*$ or $\beta'(i_{p_*},i_{q_*})>\beta_*$.  Otherwise, assume $\beta'(i_{p^*},i_{q^*})<\beta_*$ and $\beta'(i_{p_*},i_{q_*})<\beta_*$ and by \eqref{prop:errorUpdateEquivImproved:eq:3} applied to to $i_{p^*}$ and $i_{q_*}$ we obtain that there must exist an $i_{p^*+1}$ adjacent to $i_{p^*}$ with
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:6}}
+				X_{i_{p^*+1}}-X_{i_{p^*}}\geq\frac{X_{i_1}-X_{i_0}}{k^+_{i_{p^*}}+k^-_{i_{q_*}}}
+			\end{equation}
+			or there must exist an $i_{q_*-1}$ adjacent to $i_{q_*}$ such that
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:7}}
+				X_{i_{q_*-1}}-X_{i_{q_*}}\geq\frac{X_{i_1}-X_{i_0}}{k^+_{i_{p^*}}+k^-_{i_{q_*}}}.
+			\end{equation}
+			Set $i_{p^*},i_{q^*}$ equal to $i_{p^*}+1,i_{p^*}$ or $i_{p^*},i_{p^*}$ depending on if \eqref{prop:errorUpdateEquivImproved:eq:6} holds or not and set $i_{p_*},i_{q_*}$ equal to $i_{q_*},i_{q_*}-1$ or $i_{q_*},i_{q_*}$ depending on if \eqref{prop:errorUpdateEquivImproved:eq:7} holds or not. Eventually, this process must terminate by finding a pair of nodes $p,q$ 
+			
+			Let $P=(i_{-L},\ldots,i_M)\in\mathcal{P}(G,X)$ from a local minimal to a local maximal node such that $i_0,i_1$ are the nodes of \eqref{eq:largeEnoughDiff}. For any path $P$, we showed that there exist nodes $i_p,i_q$ along the path with $\beta'(i_p,i_q)>\beta_*$. In particular, let $i_{p^*},i_{q^*}$ be such a pair of nodes closest to $i_1,i_0$ with $q^*\geq0$, i.e. for all $l=1,\ldots,q^*$, $\beta'(i_l,i_l-1)<\beta_*$, and $\beta(i_{p^*},i_{q^*})>\beta_*$, and let $i_{p_*},i_{q_*}$ be such a pair of nodes closest to $i_1,i_0$ with $p_*\leq 1$, i.e. for all $l=p_*,\ldots,0$, $\beta(i_{l+1},i_{l})<\beta_*$, and $\beta'(i_{p_*},i_{q_*})>\beta_*$. We use the convention that if $q^*=i_M$ then there is no pair $i_l,i_{l-1}$ satisfying $\beta'(i_l,i_{l-1}>\beta_*$ for $l\geq1$ and similarly for $p_*=i_{-L}$. Apply \eqref{prop:errorUpdateEquivImproved:eq:equality} to $q^*$ and $p^*$ to obtain
+			\begin{equation}
+			2(X_{i_{q^*}}-X_{i_{p_*}}) + \sum_{k=1}^nA_{i_{q^*}k}(X_{i_{q^*}}-X_k) + \sum_{k=1}^nA_{i_{p_*}k}(X_k-X_{i_{p_*}}) \leq \beta^*\sum_{l=p_*+1}^{q^*}\frac{k_{i_{l}}+k_{i_{l-1}}+6}{2}(X_{i_l}-X_{i_{l-1}}),
+			\end{equation}
+			which implies
+			\begin{equation}{\label{eq:largeNextTerm}}
+			\begin{aligned}
+				\sum_{k=1}^nA_{i_{q^*k}}1\{X_{k}>X_{i_{q^*}}\}&(X_{k}-X_{i_{q^*}}) + \sum_{k=1}^nA_{i_{p_*}k}1\{X_{k}<X_{p_*}\}(X_{i_{p_*}}-X_{k})\\ &\geq 2(X_{i_q^*}-X_{i_{p_*}}) - \beta^*\sum_{l=p_*+1}^{q^*}\frac{k_{i_{l}}+k_{i_{l-1}}+6}{2}(X_{i_l}-X_{i_{l-1}}) \\&\qquad+ \sum_{k=1}^nA_{i_{q^*k}}1\{X_{k}<X_{i_{q^*}}\}(X_{i_{q^*}}-X_{k}) + \sum_{k=1}^nA_{i_{p_*}k}1\{X_{k}>X_{p_*}\}(X_{k}-X_{i_{p_*}})\\
+				&>(X_{i_{q^*}}-X_{i_{p_*}})
+			\end{aligned}
+		\end{equation}
+			Thus, \eqref{eq:largeNextTerm} implies that either 
+			
+			For each path $P$ in the network, \eqref{prop:errorUpdateEquivImproved:eq:equality} requires that the update sizes $\beta'(i_l,i_{l-1})(X_{i_l}-X_{i_{l-1}})$ must not all be too small since the right hand side of \eqref{prop:errorUpdateEquivImproved:eq:equality} is strictly positive.  Accordingly, we first find the value, as a fraction of the consensus error $e(X)^{1/2}$, that at least one of the update sizes in the path $P$ must exceed in order for \eqref{prop:errorUpdateEquivImproved:eq:equality} to hold. Assume that 
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:betaLessThan}}
+				\beta'(i_l,i_{l-1})(X_{i_{l}}-X_{i_{l-1}})\leq c'(P,X)e(X)^{1/2}
+			\end{equation}
+			for all adjacent nodes $i_l,i_{l-1}\in\mathcal{V}(G)$ in the path $P\in\mathcal{P}(G,X)$, where $c(P,X)$ is a constant depending on the path $P$ and the values $X$. Then \eqref{prop:errorUpdateEquivImproved:eq:betaLessThan} applied to \eqref{prop:errorUpdateEquivImproved:eq:equality} implies
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:5}}
+			c'(P,X)\left(\frac{1}{2}\sum_{l=1}^L(k_{i_l}+k_{i_{l-1}})+3(L-1)\right)e(X)^{1/2}\geq 2(X_{i_L}-X_{i_0}) + \sum_{k=1}^nA_{i_Lk}(X_{i_L}-X_k) + \sum_{k=1}^nA_{i_0k}(X_k-X_{i_0}),
+			\end{equation}
+			and thus,
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:6}}
+			c'(P,X) \geq \frac{2(X_{i_L}-X_{i_0}) + \sum_{k=1}^nA_{i_Lk}(X_{i_L}-X_k) + \sum_{k=1}^nA_{i_0k}(X_k-X_{i_0})}{\left(\frac{1}{2}\sum_{l=1}^L(k_{i_l}+k_{i_{l-1}})+3(L-1)\right)e(X)^{1/2}}.
+			\end{equation}
+			Therefore, at least one pair $i_{l},i_{l-1}$ of adjacent nodes in the path $P$ must have an update of size at least $c(P,X)e(X)^{1/2}$, where we set
+			\begin{equation}{\label{prop:errorUpdateEquivImproved:eq:7}}
+			c(P,X) = \frac{2(X_{i_L}-X_{i_0}) + \sum_{k=1}^nA_{i_Lk}(X_{i_L}-X_k) + \sum_{k=1}^nA_{i_0k}(X_k-X_{i_0})}{\left(\frac{1}{2}\sum_{l=1}^L(k_{i_l}+k_{i_{l-1}})+3(L-1)\right)e(X)^{1/2}}.
+			\end{equation}
+	\end{enumerate}
+\end{proof}
+\end{document}
